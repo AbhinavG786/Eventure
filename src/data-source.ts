@@ -9,11 +9,11 @@ import {Announcement} from "./entities/Announcement"
 
 export const AppDataSource = new DataSource({
     type: "postgres",
-    host: "localhost",
+    host: process.env.DB_HOST,  // will pick eventure-db in container
     port: 5432,
-    username: "postgres",
-    password: "sunil786",
-    database: "college_events",
+    username: process.env.DB_USER || "postgres",
+    password: process.env.DB_PASSWORD || "sunil786",
+    database: process.env.DB_NAME || "college_events",
     synchronize: true,
     logging: false,
     entities: [User, Society, EventEntity, Announcement, Registration],

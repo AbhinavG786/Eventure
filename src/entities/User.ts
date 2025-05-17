@@ -11,7 +11,7 @@ import { Announcement } from "./Announcement";
 import { EventEntity } from "./EventEntity";
 import { UserRole } from "./enum/userRole";
 
-@Entity()
+@Entity('users')
 export class User extends BaseEntity {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
@@ -29,7 +29,7 @@ export class User extends BaseEntity {
   role!: UserRole;
 
   @OneToMany(() => EventEntity, (event) => event.createdBy)
-  events!: Event[];
+  events!: EventEntity[];
 
   @OneToMany(() => Registration, (registration) => registration.user)
   registrations!: Registration[];
