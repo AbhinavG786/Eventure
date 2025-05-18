@@ -12,5 +12,5 @@ export class Society extends BaseEntity {
     description!: string;
 
     @OneToMany(() => EventEntity, event => event.society)
-    events!: Event[];
+    events!: EventEntity[];
 }

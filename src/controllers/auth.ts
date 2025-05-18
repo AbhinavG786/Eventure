@@ -19,7 +19,7 @@ class AuthController {
 
       const savedUser = await AppDataSource.getRepository(User).save(user);
 
-      return res.status(201).json({
+      res.status(201).json({
         message: "User created successfully",
         user: {
           id: savedUser.id,
@@ -29,43 +29,44 @@ class AuthController {
         },
       });
     } catch (error) {
-      return res.status(500).json({ message: "Error creating user", error });
+      res.status(500).json({ message: "Error creating user", error });
     }
   };
 
   login = async (req: express.Request, res: express.Response) => {
     const { email, password } = req.body;
     if (!email) {
-      return res.status(401).json({ message: "Email is required" });
+      res.status(401).json({ message: "Email is required" });
     }
     if (!password) {
-      return res.status(401).json({ message: "Password is required" });
+      res.status(401).json({ message: "Password is required" });
     }
     try {
       const user = await AppDataSource.getRepository(User).findOne({
         where: { email },
       });
       if (!user) {
-        return res.status(401).json({ message: "Invalid email or password" });
+        res.status(401).json({ message: "Invalid email or password" });
+      } else {
+        const checkPasswordValidation = await bcrypt.compare(
+          password,
+          user.password
+        );
+        if (!checkPasswordValidation) {
+          res.status(401).json({ message: "Invalid email or password" });
+        }
+        const accessToken = jwt.sign(
+          { id: user.id, email: user.email, role: user.role },
+          process.env.JWT_ACCESS_SECRET as string,
+          { expiresIn: parseInt(process.env.JWT_TOKEN_EXPIRY || "3600", 10) }
+        );
+        res.status(200).json({
+          message: "Login successful",
+          accessToken,
+        });
       }
-      const checkPasswordValidation = await bcrypt.compare(
-        password,
-        user.password
-      );
-      if (!checkPasswordValidation) {
-        return res.status(401).json({ message: "Invalid email or password" });
-      }
-      const accessToken = jwt.sign(
-        { id: user.id, email: user.email, role: user.role },
-        process.env.JWT_ACCESS_SECRET as string,
-        { expiresIn: parseInt(process.env.JWT_TOKEN_EXPIRY || "3600", 10) }
-      );
-      return res.status(200).json({
-        message: "Login successful",
-        accessToken,
-      });
     } catch (error) {
-      return res.status(500).json({ message: "Error logging in", error });
+      res.status(500).json({ message: "Error logging in", error });
     }
   };
 
@@ -73,27 +74,28 @@ class AuthController {
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
     if (!token) {
-      return res.status(401).json({ message: "Token is required" });
-    }
-    jwt.verify(
-      token,
-      process.env.JWT_ACCESS_SECRET as string,
-      (err: any, user: any) => {
-        if (err) {
-          return res.status(403).json({ message: "Invalid token" });
+      res.status(401).json({ message: "Token is required" });
+    } else {
+      jwt.verify(
+        token,
+        process.env.JWT_ACCESS_SECRET as string,
+        (err: any, user: any) => {
+          if (err) {
+            res.status(403).json({ message: "Invalid token" });
+          }
+          (req as any).user = user;
+          res.status(200).json({
+            message: "Token is valid",
+            user: {
+              id: user.id,
+              email: user.email,
+              role: user.role,
+            },
+          });
         }
-        (req as any).user = user;
-        return res.status(200).json({
-          message: "Token is valid",
-          user: {
-            id: user.id,
-            email: user.email,
-            role: user.role,
-          },
-        });
-      }
-    );
-}
+      );
+    }
+  };
 }
 
 export default new AuthController();

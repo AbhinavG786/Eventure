@@ -1,9 +1,10 @@
 import { Router } from "express";
 import passport from "../utils/passport";
 
-const router=Router();
+const router = Router();
 
-router.get("/auth/google",
+router.get(
+  "/auth/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
