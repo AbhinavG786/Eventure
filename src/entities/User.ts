@@ -11,7 +11,7 @@ import { Announcement } from "./Announcement";
 import { EventEntity } from "./EventEntity";
 import { UserRole } from "./enum/userRole";
 
-@Entity('users')
+@Entity("users")
 export class User extends BaseEntity {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
@@ -24,6 +24,9 @@ export class User extends BaseEntity {
 
   @Column()
   password!: string;
+
+  @Column({ nullable: true })
+  googleId?: string;
 
   @Column({ type: "enum", enum: UserRole, default: UserRole.STUDENT })
   role!: UserRole;

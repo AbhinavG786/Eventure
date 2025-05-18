@@ -35,6 +35,10 @@ __decorate([
     __metadata("design:type", String)
 ], User.prototype, "password", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], User.prototype, "googleId", void 0);
+__decorate([
     (0, typeorm_1.Column)({ type: "enum", enum: userRole_1.UserRole, default: userRole_1.UserRole.STUDENT }),
     __metadata("design:type", String)
 ], User.prototype, "role", void 0);
@@ -51,5 +55,5 @@ __decorate([
     __metadata("design:type", Array)
 ], User.prototype, "announcements", void 0);
 exports.User = User = __decorate([
-    (0, typeorm_1.Entity)('users')
+    (0, typeorm_1.Entity)("users")
 ], User);
