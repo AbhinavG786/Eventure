@@ -28,7 +28,7 @@ class UserController {
   };
   updateUser = async (req: express.Request, res: express.Response) => {
     const { id } = req.params;
-    const { name, email, password, role } = req.body;
+    const { name, email, admissionNumber, aboutMe } = req.body;
     try {
       const user = await AppDataSource.getRepository(User).findOne({
         where: { id },
@@ -38,8 +38,8 @@ class UserController {
       } else {
         user.name = name || user.name;
         user.email = email || user.email;
-        user.password = password || user.password;
-        user.role = role || user.role;
+        user.admissionNumber = admissionNumber || user.admissionNumber;
+        user.aboutMe = aboutMe || user.aboutMe;
 
         const updatedUser = await AppDataSource.getRepository(User).save(user);
         res.status(200).json(updatedUser);

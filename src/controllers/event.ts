@@ -6,7 +6,7 @@ import { AppDataSource } from "../data-source";
 
 class EventController {
   createEvent = async (req: express.Request, res: express.Response) => {
-    const { name, description, date, societyId, userId } = req.body;
+    const { name, description, startTime,endTime, societyId, userId } = req.body;
     try {
       const event = new EventEntity();
       const society = await AppDataSource.getRepository(Society).findOne({
@@ -28,7 +28,8 @@ class EventController {
       if (user && society) {
         event.name = name;
         event.description = description;
-        event.date = date;
+        event.startTime = startTime;
+        event.endTime = endTime;
         event.society = society;
         event.createdBy = user;
 
@@ -91,7 +92,7 @@ class EventController {
 
   updateEventById = async (req: express.Request, res: express.Response) => {
     const { id } = req.params;
-    const { name, description, date } = req.body;
+    const { name, description, startTime,endTime } = req.body;
     try {
       const event = await AppDataSource.getRepository(EventEntity).findOne({
         where: { id },
@@ -103,7 +104,8 @@ class EventController {
       } else {
         event.name = name;
         event.description = description;
-        event.date = date;
+        event.startTime = startTime;
+        event.endTime = endTime;
 
         const updatedEvent = await AppDataSource.getRepository(
           EventEntity

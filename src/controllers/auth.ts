@@ -4,10 +4,13 @@ import jwt from "jsonwebtoken";
 import { User } from "../entities/User";
 import { UserRole } from "../entities/enum/userRole";
 import { AppDataSource } from "../data-source";
+import { Society } from "../entities/Society";
+import redisClient from "../utils/redis";
+import sendMailer from "../utils/sendMailer";
 
 class AuthController {
-  signUp = async (req: express.Request, res: express.Response) => {
-    const { name, email, password, role } = req.body;
+  signUpAsStudent = async (req: express.Request, res: express.Response) => {
+    const { name, email, password, admissionNumber, aboutMe } = req.body;
 
     try {
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -15,9 +18,16 @@ class AuthController {
       user.name = name;
       user.email = email;
       user.password = hashedPassword;
-      user.role = role || UserRole.STUDENT;
+      user.admissionNumber = admissionNumber;
+      user.aboutMe = aboutMe;
+      user.role = UserRole.STUDENT;
 
       const savedUser = await AppDataSource.getRepository(User).save(user);
+      const accessToken = jwt.sign(
+        { id: user.id, email: user.email },
+        process.env.JWT_ACCESS_SECRET as string,
+        { expiresIn: parseInt(process.env.JWT_TOKEN_EXPIRY || "3600", 10) }
+      );
 
       res.status(201).json({
         message: "User created successfully",
@@ -25,11 +35,65 @@ class AuthController {
           id: savedUser.id,
           name: savedUser.name,
           email: savedUser.email,
+          admissionNumber: savedUser.admissionNumber,
+          aboutMe: savedUser.aboutMe,
           role: savedUser.role,
         },
+        accessToken,
       });
     } catch (error) {
       res.status(500).json({ message: "Error creating user", error });
+    }
+  };
+
+  signUpAsSocietyAdmin = async (
+    req: express.Request,
+    res: express.Response
+  ) => {
+    const {
+      name,
+      email,
+      password,
+      societyName,
+      societyDescription,
+      societyType,
+      admissionNumber,
+    } = req.body;
+    try {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const user = new User();
+      user.name = name;
+      user.email = email;
+      user.admissionNumber = admissionNumber;
+      user.password = hashedPassword;
+      user.role = UserRole.SOCIETY_ADMIN;
+
+      const society = new Society();
+      society.name = societyName;
+      society.description = societyDescription;
+      society.type = societyType;
+      society.admin = user;
+      const societyAdmin = await AppDataSource.getRepository(Society).save(
+        society
+      );
+      const accessToken = jwt.sign(
+        { id: user.id, email: user.email },
+        process.env.JWT_ACCESS_SECRET as string,
+        { expiresIn: parseInt(process.env.JWT_TOKEN_EXPIRY || "3600", 10) }
+      );
+
+      res.status(201).json({
+        message: "Society admin created successfully",
+        societyAdmin: {
+          id: societyAdmin.id,
+          name: societyAdmin.name,
+          description: societyAdmin.description,
+          type: societyAdmin.type,
+        },
+        accessToken,
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Error creating society admin", error });
     }
   };
 
@@ -56,7 +120,7 @@ class AuthController {
           res.status(401).json({ message: "Invalid email or password" });
         }
         const accessToken = jwt.sign(
-          { id: user.id, email: user.email, role: user.role },
+          { id: user.id, email: user.email },
           process.env.JWT_ACCESS_SECRET as string,
           { expiresIn: parseInt(process.env.JWT_TOKEN_EXPIRY || "3600", 10) }
         );
@@ -83,7 +147,8 @@ class AuthController {
           if (err) {
             res.status(403).json({ message: "Invalid token" });
           }
-          (req as any).user = user;
+          // (req as any).user = user;
+          req.user = user;
           res.status(200).json({
             message: "Token is valid",
             user: {
@@ -96,6 +161,29 @@ class AuthController {
       );
     }
   };
+
+  sendOtpToEmail = async (req: express.Request, res: express.Response) => {
+    const { email } = req.body;
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+    const otpExpiry = Date.now() + 10 * 60 * 1000;
+    await redisClient.set(`otp:${email}`, otp, { EX: otpExpiry });
+    await sendMailer.sendVerificationEmail(email, otp);
+    res.status(200).json({ message: "OTP sent to email" });
+  };
+
+  verifyOtp = async (req: express.Request, res: express.Response) => {
+    const { email, otp } = req.body;
+    const storedOtp = await redisClient.get(`otp:${email}`);
+    if (!storedOtp) {
+       res.status(400).json({ message: "OTP expired or invalid" });
+    }
+    if (storedOtp !== otp) {
+       res.status(400).json({ message: "Invalid OTP" });
+    }
+    await redisClient.del(`otp:${email}`);
+    res.status(200).json({ message: "OTP verified successfully" });
+  };
+
 }
 
 export default new AuthController();

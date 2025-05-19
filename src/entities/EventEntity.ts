@@ -1,32 +1,42 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, BaseEntity } from 'typeorm';
-import { Society } from './Society';
-import { User } from './User';
-import { Registration } from './Registration';
-import { Announcement } from './Announcement';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  OneToMany,
+  BaseEntity,
+} from "typeorm";
+import { Society } from "./Society";
+import { User } from "./User";
+import { Registration } from "./Registration";
+import { Announcement } from "./Announcement";
 
 @Entity()
 export class EventEntity extends BaseEntity {
-    @PrimaryGeneratedColumn('uuid')
-    id!: string;
+  @PrimaryGeneratedColumn("uuid")
+  id!: string;
 
-    @Column()
-    name!: string;
+  @Column()
+  name!: string;
 
-    @Column('text')
-    description!: string;
+  @Column("text")
+  description!: string;
 
-    @Column('timestamp')
-    date!: Date;
+  @Column({ type: "timestamp" })
+  startTime!: Date;
 
-    @ManyToOne(() => Society, society => society.events)
-    society!: Society;
+  @Column({ type: "timestamp" })
+  endTime!: Date;
 
-    @ManyToOne(() => User, user => user.events)
-    createdBy!: User;
+  @ManyToOne(() => Society, (society) => society.events)
+  society!: Society;
 
-    @OneToMany(() => Registration, registration => registration.event)
-    registrations!: Registration[];
+  @ManyToOne(() => User, (user) => user.events)
+  createdBy!: User;
 
-    @OneToMany(() => Announcement, announcement => announcement.event)
-    announcements!: Announcement[];
+  @OneToMany(() => Registration, (registration) => registration.event)
+  registrations!: Registration[];
+
+  @OneToMany(() => Announcement, (announcement) => announcement.event)
+  announcements!: Announcement[];
 }

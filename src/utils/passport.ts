@@ -1,7 +1,9 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { User } from "../entities/User";
+import bcrypt from "bcrypt";
 import { AppDataSource } from "../data-source";
+import { LoginProvider } from "../entities/enum/loginProvider";
 
 passport.use(
   new GoogleStrategy(
@@ -18,8 +20,11 @@ passport.use(
       if (!user) {
         user = userRepository.create({
           googleId: profile.id,
-          name: profile.displayName,
-          email: profile.emails?.[0].value,
+          name: profile.displayName || "Google User",
+          password:await bcrypt.hash(profile.id, 10),
+          admissionNumber: await bcrypt.hash(Date.now().toString(), 10),
+          provider: LoginProvider.GOOGLE,
+          email: profile.emails?.[0].value
         });
         await userRepository.save(user);
       }

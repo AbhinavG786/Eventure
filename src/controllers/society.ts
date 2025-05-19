@@ -4,11 +4,12 @@ import { AppDataSource } from "../data-source";
 
 class SocietyController {
   createSociety = async (req: express.Request, res: express.Response) => {
-    const { name, description } = req.body;
+    const { name, description,type } = req.body;
     try {
       const society = new Society();
       society.name = name;
       society.description = description;
+      society.type = type;
       const newSociety = await AppDataSource.getRepository(Society).save(
         society
       );
