@@ -36,6 +36,9 @@ export class User extends BaseEntity {
   @Column({ nullable: true })
   aboutMe?: string;
 
+  @Column({ nullable: true })
+  profilePic?: string;
+
   @Column({ type: "enum", enum: UserRole, default: UserRole.STUDENT })
   role!: UserRole;
 

@@ -6,7 +6,7 @@ import { AppDataSource } from "../data-source";
 import { RegistrationStatus } from "../entities/enum/registrationStatus";
 
 class RegistrationController {
-  registerUser = async (req: express.Request, res: express.Response) => {
+  registerUserForEvent = async (req: express.Request, res: express.Response) => {
     const { userId, eventId, registrationStatus } = req.body;
     try {
       const registration = new Registration();

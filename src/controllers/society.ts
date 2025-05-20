@@ -4,7 +4,7 @@ import { AppDataSource } from "../data-source";
 
 class SocietyController {
   createSociety = async (req: express.Request, res: express.Response) => {
-    const { name, description,type } = req.body;
+    const { name, description, type } = req.body;
     try {
       const society = new Society();
       society.name = name;

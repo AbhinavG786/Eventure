@@ -7,11 +7,12 @@ import { AppDataSource } from "../data-source";
 import { Society } from "../entities/Society";
 import redisClient from "../utils/redis";
 import sendMailer from "../utils/sendMailer";
+import { imagekit } from "../utils/imageKit";
 
 class AuthController {
   signUpAsStudent = async (req: express.Request, res: express.Response) => {
-    const { name, email, password, admissionNumber, aboutMe } = req.body;
-
+    const { name, email, password, admissionNumber, aboutMe,sessionId } = req.body;
+// store the backend generated sessionId in memory/localstorage which will be sent in the response in the upload api and then give it in request body
     try {
       const hashedPassword = await bcrypt.hash(password, 10);
       const user = new User();
@@ -21,8 +22,18 @@ class AuthController {
       user.admissionNumber = admissionNumber;
       user.aboutMe = aboutMe;
       user.role = UserRole.STUDENT;
+      if(sessionId){
+        const uploadedUrl=await redisClient.get(`signup:image:${sessionId}`);
+        if(uploadedUrl){
+          user.profilePic=uploadedUrl;
+        }
+      }
 
       const savedUser = await AppDataSource.getRepository(User).save(user);
+      await imagekit.moveFile({
+  sourceFilePath: `/temp/profile_${sessionId}.jpg`,
+  destinationPath: `/users/${user.id}/profile.jpg`
+});
       const accessToken = jwt.sign(
         { id: user.id, email: user.email },
         process.env.JWT_ACCESS_SECRET as string,
@@ -165,8 +176,8 @@ class AuthController {
   sendOtpToEmail = async (req: express.Request, res: express.Response) => {
     const { email } = req.body;
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
-    const otpExpiry = Date.now() + 10 * 60 * 1000;
-    await redisClient.set(`otp:${email}`, otp, { EX: otpExpiry });
+    const otpExpiry = Date.now() + 10 * 60 * 1000; //10 mins
+    await redisClient.set(`otp:${email}`, otp, { PX: otpExpiry }); // expiry time in milliseconds
     await sendMailer.sendVerificationEmail(email, otp);
     res.status(200).json({ message: "OTP sent to email" });
   };

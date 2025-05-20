@@ -1,7 +1,9 @@
 import express from "express";
 import { User } from "../entities/User";
-import { UserRole } from "../entities/enum/userRole";
 import { AppDataSource } from "../data-source";
+import { imagekit } from "../utils/imageKit";
+import {v4 as uuidv4} from "uuid";
+import redisClient from "../utils/redis";
 
 class UserController {
   getUserById = async (req: express.Request, res: express.Response) => {
@@ -95,6 +97,29 @@ class UserController {
         .json({ message: "Error fetching registered events", error });
     }
   };
+
+  uploadProfilePicBeforeSignUp=async (req: express.Request, res: express.Response) => {
+    // const {sessionId}=req.body; //either generate it on frontend and send it to backend or let me generate it here
+    const sessionId=uuidv4();
+  try{
+    const fileBuffer=req.file?.buffer;
+    if(fileBuffer){
+    const uploadedImage=await imagekit.upload({
+      file:fileBuffer,
+      fileName: `profile_${sessionId}.jpg`,
+      folder:"/temp"
+    })
+    await redisClient.set(`signup:image:${sessionId}`, uploadedImage.url, {
+      EX: 600 // Expiry time in seconds
+    });
+    res.status(200).json({
+      message:"Image uploaded successfully",sessionId})
+  }
+  }
+  catch(error){
+    res.status(500).json({message:"Error uploading image",error})
+  }
+}
 }
 
 export default new UserController();
