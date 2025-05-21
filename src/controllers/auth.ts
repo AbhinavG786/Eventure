@@ -11,8 +11,9 @@ import { imagekit } from "../utils/imageKit";
 
 class AuthController {
   signUpAsStudent = async (req: express.Request, res: express.Response) => {
-    const { name, email, password, admissionNumber, aboutMe,sessionId } = req.body;
-// store the backend generated sessionId in memory/localstorage which will be sent in the response in the upload api and then give it in request body
+    const { name, email, password, admissionNumber, aboutMe, sessionId } =
+      req.body;
+    // store the backend generated sessionId in memory/localstorage which will be sent in the response in the upload api and then give it in request body
     try {
       const hashedPassword = await bcrypt.hash(password, 10);
       const user = new User();
@@ -22,18 +23,18 @@ class AuthController {
       user.admissionNumber = admissionNumber;
       user.aboutMe = aboutMe;
       user.role = UserRole.STUDENT;
-      if(sessionId){
-        const uploadedUrl=await redisClient.get(`signup:image:${sessionId}`);
-        if(uploadedUrl){
-          user.profilePic=uploadedUrl;
+      if (sessionId) {
+        const uploadedUrl = await redisClient.get(`signup:image:${sessionId}`);
+        if (uploadedUrl) {
+          user.profilePic = uploadedUrl;
         }
       }
 
       const savedUser = await AppDataSource.getRepository(User).save(user);
       await imagekit.moveFile({
-  sourceFilePath: `/temp/profile_${sessionId}.jpg`,
-  destinationPath: `/users/${user.id}/profile.jpg`
-});
+        sourceFilePath: `/temp/profile_${sessionId}.jpg`,
+        destinationPath: `/users/${user.id}/profile.jpg`,
+      });
       const accessToken = jwt.sign(
         { id: user.id, email: user.email },
         process.env.JWT_ACCESS_SECRET as string,
@@ -186,15 +187,110 @@ class AuthController {
     const { email, otp } = req.body;
     const storedOtp = await redisClient.get(`otp:${email}`);
     if (!storedOtp) {
-       res.status(400).json({ message: "OTP expired or invalid" });
+      res.status(400).json({ message: "OTP expired or invalid" });
     }
     if (storedOtp !== otp) {
-       res.status(400).json({ message: "Invalid OTP" });
+      res.status(400).json({ message: "Invalid OTP" });
     }
     await redisClient.del(`otp:${email}`);
     res.status(200).json({ message: "OTP verified successfully" });
   };
 
+  requestPasswordReset = async (
+    req: express.Request,
+    res: express.Response
+  ) => {
+    const { email } = req.body;
+    try {
+      const user = await AppDataSource.getRepository(User).findOne({
+        where: { email },
+      });
+      if (!user) {
+        res.status(400).json({ message: "User not found" });
+      } else {
+        const token = jwt.sign(
+          { id: user.id, email: user.email },
+          process.env.JWT_ACCESS_SECRET as string
+        );
+        await redisClient.set(`password-reset:${user.id}`, token, {
+          EX: 5 * 60,
+        });
+        const resetLink = `${process.env.FRONTEND_URL}/reset-password/${user.id}/${token}`;
+
+        await sendMailer.sendPasswordResetMail(email, resetLink);
+        res.status(200).json({ message: "Password reset link sent to email" });
+      }
+    } catch (error) {
+      res
+        .status(500)
+        .json({ message: "Error requesting password reset", error });
+    }
+  };
+
+  verifyPasswordResetToken = async (
+    req: express.Request,
+    res: express.Response
+  ) => {
+    const { token, userId } = req.params;
+    try {
+      const user = await AppDataSource.getRepository(User).findOne({
+        where: { id: userId },
+      });
+      if (!user) {
+        res.status(400).json({ message: "User not found" });
+      } else {
+        const storedToken = await redisClient.get(`password-reset:${user.id}`);
+        if (!storedToken) {
+          res.status(400).json({ message: "Token expired or invalid" });
+        } else {
+          jwt.verify(
+            token,
+            process.env.JWT_ACCESS_SECRET as string,
+            async (err: any) => {
+              if (err) {
+                res.status(400).json({ message: "Invalid token" });
+              } else {
+                res
+                  .status(200)
+                  .json({ message: "Token verified successfully" });
+                await redisClient.del(`password-reset:${user.id}`);
+              }
+            }
+          );
+        }
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Error verifying token", error });
+    }
+  };
+
+  resetPassword = async (req: express.Request, res: express.Response) => {
+    const { oldPassword, newPassword } = req.body;
+    const { userId } = req.params;
+    try {
+      const user = await AppDataSource.getRepository(User).findOne({
+        where: { id: userId },
+      });
+      if (!user) {
+        res.status(400).json({ message: "User not found" });
+      } else {
+        const checkPasswordValidation = await bcrypt.compare(
+          oldPassword,
+          user.password
+        );
+        if (!checkPasswordValidation) {
+          res.status(400).json({ message: "Old password is incorrect" });
+        } else {
+          const hashedPassword = await bcrypt.hash(newPassword, 10);
+          user.password = hashedPassword;
+          await AppDataSource.getRepository(User).save(user);
+          res.status(200).json({ message: "Password reset successfully" });
+        }
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Error resetting password", error });
+    }
+  };
 }
 
 export default new AuthController();

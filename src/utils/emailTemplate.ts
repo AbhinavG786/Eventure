@@ -1,4 +1,4 @@
-type TemplateType = "verification" | "registration";
+type TemplateType = "verification" | "registration" | "passwordReset";
 export const generateEmailTemplate = (type: TemplateType, token: string) => {
   const templates = {
     verification: `<!DOCTYPE html>
@@ -43,9 +43,9 @@ export const generateEmailTemplate = (type: TemplateType, token: string) => {
     <div class="container">
       <h2>Verify Your Email Address</h2>
       <p>Use the OTP below to complete your sign-up process.</p>
-      <div class="otp">${token}</div>
+      <div class="otp">{token}</div>
       <p>This OTP will expire in 5 minutes.</p>
-      <p>If you didn’t request this, you can safely ignore this email.</p>
+      <p>If you didn't request this, you can safely ignore this email.</p>
       <div class="footer">
         &copy; Eventure | Bringing campus events to your fingertips.
       </div>
@@ -54,6 +54,71 @@ export const generateEmailTemplate = (type: TemplateType, token: string) => {
 </html>
 `,
     registration: ``,
+    passwordReset:`
+    <!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Password Reset</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f7;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        max-width: 600px;
+        margin: 40px auto;
+        background-color: #ffffff;
+        border-radius: 6px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        padding: 30px;
+      }
+      h2 {
+        color: #333333;
+      }
+      p {
+        color: #555555;
+        line-height: 1.5;
+      }
+      .button {
+        display: inline-block;
+        margin-top: 20px;
+        padding: 12px 20px;
+        background-color: #007bff;
+        color: #ffffff !important;
+        text-decoration: none;
+        border-radius: 5px;
+        font-weight: bold;
+      }
+      .footer {
+        margin-top: 30px;
+        font-size: 12px;
+        color: #999999;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Reset Your Password</h2>
+      <p>Hello,</p>
+      <p>
+        We received a request to reset your password. Click the button below to
+        choose a new password. This link is valid for 5 minutes.
+      </p>
+      <a href="{{token}}" class="button">Reset Password</a>
+      <p>If you did not request a password reset, you can safely ignore this email.</p>
+      <div class="footer">
+        <p>&copy; Eventure. All rights reserved.</p>
+      </div>
+    </div>
+  </body>
+</html>
+
+    `
   };
   return templates[type];
 };
