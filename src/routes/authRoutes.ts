@@ -11,3 +11,5 @@ router.route("/verify-otp").post(auth.verifyOtp)
 router.route("/request-reset").post(auth.requestPasswordReset)
 router.route("/verify/:userId/:token").post(auth.verifyPasswordResetToken)
 router.route("/reset/:userId").post(auth.resetPassword)
+
+export default router;

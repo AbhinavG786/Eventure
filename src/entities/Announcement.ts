@@ -10,6 +10,9 @@ export class Announcement extends BaseEntity {
     @Column('text')
     content!: string;
 
+    @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+    createdAt!: Date;
+
     @ManyToOne(() => User, user => user.announcements)
     user!: User;
 

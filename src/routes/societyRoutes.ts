@@ -7,3 +7,5 @@ router.route("/all").get(society.getAllSocieties);
 router.route("/:id").get(society.getSocietyById);
 router.route("/:id").patch(society.updateSocietyById);
 router.route("/:id").delete(society.deleteSocietyById);
+
+export default router;

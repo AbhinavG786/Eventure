@@ -13,3 +13,5 @@ router.route("/:id").patch(event.updateEventById);
 router.route("/:id").delete(event.deleteEventById);
 router.route("/rate/:id").patch(event.rateEvent);
 router.route("/upload/:id").post(upload.single("eventpic"),event.uploadEventPic)
+
+export default router;
