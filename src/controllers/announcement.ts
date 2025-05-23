@@ -92,6 +92,7 @@ class AnnouncementController {
   getAnnouncements = async (req: express.Request, res: express.Response) => {
     const announcements = await AppDataSource.getRepository(Announcement).find({
       order: { createdAt: "DESC" },
+      relations:["event","society"]
     });
     if (!announcements || announcements.length === 0) {
        res.status(404).json({ message: "No announcements found" });

@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, BaseEntity } from 'typeorm';
 import { User } from './User';
 import { EventEntity } from './EventEntity';
+import { Society } from './Society';
 
 @Entity()
 export class Announcement extends BaseEntity {
@@ -18,4 +19,7 @@ export class Announcement extends BaseEntity {
 
     @ManyToOne(() => EventEntity, event => event.announcements)
     event!: EventEntity;
+
+    @ManyToOne(()=>Society, (society) => society.announcements)
+    society!: Society;
 }

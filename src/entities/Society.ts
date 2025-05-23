@@ -10,6 +10,7 @@ import {
 import { EventEntity } from "./EventEntity";
 import { SocietyType } from "./enum/societyType";
 import { User } from "./User";
+import { Announcement } from "./Announcement";
 @Entity()
 export class Society extends BaseEntity {
   @PrimaryGeneratedColumn("uuid")
@@ -30,4 +31,7 @@ export class Society extends BaseEntity {
 
   @OneToMany(() => EventEntity, (event) => event.society)
   events!: EventEntity[];
+
+  @OneToMany(()=>Announcement, (announcement) => announcement.society)
+  announcements!: Announcement[];
 }
