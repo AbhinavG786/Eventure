@@ -6,6 +6,9 @@ import { Bookmark } from "../entities/bookmark";
 import { In, MoreThanOrEqual } from "typeorm";
 import { AppDataSource } from "../data-source";
 import { imagekit } from "../utils/imageKit";
+import redisClient from "../utils/redis";
+
+const TRENDING_CACHE_KEY = "trending_events";
 
 class EventController {
   createEvent = async (req: express.Request, res: express.Response) => {
@@ -211,34 +214,6 @@ class EventController {
     }
   };
 
-  // toggleBookmarkEvent = async (req: express.Request, res: express.Response) => {
-  //   const { id } = req.params;
-  //   try {
-  //     const event = await AppDataSource.getRepository(EventEntity).findOne({
-  //       where: { id },
-  //     });
-  //     if (!event) {
-  //       res.status(404).json({
-  //         message: "Event not found",
-  //       });
-  //     } else {
-  //       event.bookmark = !event.bookmark;
-  //       const updatedEvent = await AppDataSource.getRepository(
-  //         EventEntity
-  //       ).save(event);
-  //       res.status(200).json({
-  //         message: "Event bookmark toggled successfully",
-  //         event: updatedEvent,
-  //       });
-  //     }
-  //   } catch (error) {
-  //     res.status(500).json({
-  //       message: "Error toggling bookmark",
-  //       error,
-  //     });
-  //   }
-  // };
-
   toggleBookmarkEvent = async (req: express.Request, res: express.Response) => {
     const { userId, eventId } = req.body;
 
@@ -416,6 +391,49 @@ class EventController {
     } catch (error) {
       res.status(500).json({
         message: "Error getting personalized events",
+        error,
+      });
+    }
+  };
+
+  getTrendingEvents = async (req:express.Request,res:express.Response) => {
+    try {
+      const cached = await redisClient.get(TRENDING_CACHE_KEY);
+      if (cached) {
+         res.status(200).json({
+          message: "Trending events (from cache)",
+          events: JSON.parse(cached),
+        });
+      }
+
+      const sinceDate = new Date(Date.now() - 24 * 60 * 60 * 1000); // last 24 hours
+
+      const trendingEvents = await AppDataSource.getRepository(EventEntity)
+        .createQueryBuilder("event")
+        .leftJoinAndSelect("event.registrations", "registration")
+        .leftJoinAndSelect("event.society", "society")
+        .leftJoinAndSelect("event.createdBy", "creator")
+        .where("registration.createdAt >= :sinceDate", { sinceDate })
+        .groupBy("event.id")
+        .addGroupBy("society.id")
+        .addGroupBy("creator.id")
+        .orderBy("COUNT(registration.id)", "DESC")
+        .limit(10)
+        .getMany();
+
+      await redisClient.setEx(
+        TRENDING_CACHE_KEY,
+        300, // 5 minutes
+        JSON.stringify(trendingEvents)
+      );
+
+       res.status(200).json({
+        message: "Trending events (from DB)",
+        events: trendingEvents,
+      });
+    } catch (error) {
+       res.status(500).json({
+        message: "Internal server error",
         error,
       });
     }

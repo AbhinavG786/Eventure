@@ -15,5 +15,6 @@ router.route("/:id").delete(event.deleteEventById);
 router.route("/rate/:id").patch(event.rateEvent);
 router.route("/upload/:id").post(upload.single("eventpic"), event.uploadEventPic);
 router.route("/personalized/:userId").get(event.showPersonalizedEvents);
+router.route("/trending").get(event.getTrendingEvents);
 
 export default router;

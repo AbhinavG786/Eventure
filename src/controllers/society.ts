@@ -30,6 +30,7 @@ class SocietyController {
     try {
       const society = await AppDataSource.getRepository(Society).findOne({
         where: { id },
+        relations: ["admin"],
       });
       if (!society) {
         res.status(404).json({
