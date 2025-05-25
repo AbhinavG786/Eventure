@@ -5,12 +5,13 @@ import {
   OneToOne,
   OneToMany,
   BaseEntity,
-  JoinColumn
+  JoinColumn,
 } from "typeorm";
 import { EventEntity } from "./EventEntity";
 import { SocietyType } from "./enum/societyType";
 import { User } from "./User";
 import { Announcement } from "./Announcement";
+import { Follower } from "./Follower";
 @Entity()
 export class Society extends BaseEntity {
   @PrimaryGeneratedColumn("uuid")
@@ -29,9 +30,12 @@ export class Society extends BaseEntity {
   @JoinColumn()
   admin!: User;
 
+  @OneToMany(() => Follower, (follower) => follower.society)
+  followers!: Follower[];
+
   @OneToMany(() => EventEntity, (event) => event.society)
   events!: EventEntity[];
 
-  @OneToMany(()=>Announcement, (announcement) => announcement.society)
+  @OneToMany(() => Announcement, (announcement) => announcement.society)
   announcements!: Announcement[];
 }

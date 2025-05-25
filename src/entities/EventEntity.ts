@@ -5,12 +5,13 @@ import {
   ManyToOne,
   OneToMany,
   BaseEntity,
-  Check
+  Check,
 } from "typeorm";
 import { Society } from "./Society";
 import { User } from "./User";
 import { Registration } from "./Registration";
 import { Announcement } from "./Announcement";
+import { Bookmark } from "./bookmark";
 
 @Entity()
 export class EventEntity extends BaseEntity {
@@ -36,11 +37,11 @@ export class EventEntity extends BaseEntity {
   @Column({ type: "timestamp" })
   endTime!: Date;
 
-  @Column({ default: false })
-  bookmark!: boolean;
-
   @Column({ nullable: true })
   eventPic?: string;
+
+  @OneToMany(() => Bookmark, (bookmark) => bookmark.event)
+  bookmarks!: Bookmark[];
 
   @ManyToOne(() => Society, (society) => society.events)
   society!: Society;

@@ -13,6 +13,8 @@ import { UserRole } from "./enum/userRole";
 import { Society } from "./Society";
 import { Subscription } from "./Subscriptions";
 import { LoginProvider } from "./enum/loginProvider";
+import { Follower } from "./Follower";
+import { Bookmark } from "./bookmark";
 
 @Entity("users")
 export class User extends BaseEntity {
@@ -43,16 +45,22 @@ export class User extends BaseEntity {
   @Column({ type: "enum", enum: UserRole, default: UserRole.STUDENT })
   role!: UserRole;
 
-  @Column({ type: 'enum', enum: LoginProvider , default: LoginProvider.LOCAL}) 
+  @Column({ type: "enum", enum: LoginProvider, default: LoginProvider.LOCAL })
   provider!: LoginProvider;
+
+  @OneToMany(() => Bookmark, (bookmark) => bookmark.user)
+  bookmarks!: Bookmark[];
 
   @OneToOne(() => Society, (society) => society.admin)
   society?: Society;
 
+  @OneToMany(() => Follower, (follower) => follower.user)
+  following!: Follower[];
+
   @OneToMany(() => EventEntity, (event) => event.createdBy)
   events!: EventEntity[];
 
-  @OneToMany(()=>Subscription,(subscription)=>subscription.user)
+  @OneToMany(() => Subscription, (subscription) => subscription.user)
   subscriptions!: Subscription[];
 
   @OneToMany(() => Registration, (registration) => registration.user)

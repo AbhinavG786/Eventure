@@ -2,8 +2,9 @@ import express from "express";
 import { EventEntity } from "../entities/EventEntity";
 import { Society } from "../entities/Society";
 import { User } from "../entities/User";
+import { Bookmark } from "../entities/bookmark";
+import { In, MoreThanOrEqual } from "typeorm";
 import { AppDataSource } from "../data-source";
-import { MoreThanOrEqual } from "typeorm";
 import { imagekit } from "../utils/imageKit";
 
 class EventController {
@@ -210,29 +211,93 @@ class EventController {
     }
   };
 
+  // toggleBookmarkEvent = async (req: express.Request, res: express.Response) => {
+  //   const { id } = req.params;
+  //   try {
+  //     const event = await AppDataSource.getRepository(EventEntity).findOne({
+  //       where: { id },
+  //     });
+  //     if (!event) {
+  //       res.status(404).json({
+  //         message: "Event not found",
+  //       });
+  //     } else {
+  //       event.bookmark = !event.bookmark;
+  //       const updatedEvent = await AppDataSource.getRepository(
+  //         EventEntity
+  //       ).save(event);
+  //       res.status(200).json({
+  //         message: "Event bookmark toggled successfully",
+  //         event: updatedEvent,
+  //       });
+  //     }
+  //   } catch (error) {
+  //     res.status(500).json({
+  //       message: "Error toggling bookmark",
+  //       error,
+  //     });
+  //   }
+  // };
+
   toggleBookmarkEvent = async (req: express.Request, res: express.Response) => {
-    const { id } = req.params;
+    const { userId, eventId } = req.body;
+
     try {
-      const event = await AppDataSource.getRepository(EventEntity).findOne({
-        where: { id },
+      const user = await AppDataSource.getRepository(User).findOneBy({
+        id: userId,
       });
-      if (!event) {
-        res.status(404).json({
-          message: "Event not found",
-        });
+      const event = await AppDataSource.getRepository(EventEntity).findOneBy({
+        id: eventId,
+      });
+
+      if (!user || !event) {
+        res.status(404).json({ message: "User or Event not found" });
+        return;
+      }
+
+      const existingBookmark = await AppDataSource.getRepository(
+        Bookmark
+      ).findOne({
+        where: {
+          user: { id: userId },
+          event: { id: eventId },
+        },
+      });
+
+      if (existingBookmark) {
+        await AppDataSource.getRepository(Bookmark).remove(existingBookmark);
+        res.status(200).json({ message: "Bookmark removed" });
       } else {
-        event.bookmark = !event.bookmark;
-        const updatedEvent = await AppDataSource.getRepository(
-          EventEntity
-        ).save(event);
-        res.status(200).json({
-          message: "Event bookmark toggled successfully",
-          event: updatedEvent,
+        const newBookmark = AppDataSource.getRepository(Bookmark).create({
+          user,
+          event,
         });
+        await AppDataSource.getRepository(Bookmark).save(newBookmark);
+        res.status(200).json({ message: "Bookmark added" });
       }
     } catch (error) {
+      res.status(500).json({ message: "Error toggling bookmark", error });
+    }
+  };
+
+  getBookmarkedEvents = async (req: express.Request, res: express.Response) => {
+    const { userId } = req.params;
+
+    try {
+      const bookmarks = await AppDataSource.getRepository(Bookmark).find({
+        where: { user: { id: userId } },
+        relations: ["event", "event.society", "event.createdBy"],
+      });
+
+      const events = bookmarks.map((b) => b.event);
+
+      res.status(200).json({
+        message: "Bookmarked events fetched successfully",
+        events,
+      });
+    } catch (error) {
       res.status(500).json({
-        message: "Error toggling bookmark",
+        message: "Error fetching bookmarked events",
         error,
       });
     }
@@ -302,6 +367,55 @@ class EventController {
     } catch (error) {
       res.status(500).json({
         message: "Error uploading event picture",
+        error,
+      });
+    }
+  };
+
+  showPersonalizedEvents = async (
+    req: express.Request,
+    res: express.Response
+  ) => {
+    const { userId } = req.params;
+
+    try {
+      const user = await AppDataSource.getRepository(User).findOne({
+        where: { id: userId },
+        relations: ["following", "following.society"],
+      });
+
+      if (!user) {
+        res.status(404).json({ message: "User not found" });
+      } else {
+        const followedSocieties = user.following
+          .map((f) => f.society?.id)
+          .filter(Boolean);
+
+        if (followedSocieties.length === 0) {
+          res
+            .status(200)
+            .json({ message: "No followed societies", events: [] });
+        }
+
+        const events = await AppDataSource.getRepository(EventEntity).find({
+          where: {
+            society: { id: In(followedSocieties) },
+            startTime: MoreThanOrEqual(new Date()),
+          },
+          relations: ["society", "createdBy"],
+          order: {
+            startTime: "ASC",
+          },
+        });
+
+        res.status(200).json({
+          message: "Personalized events found",
+          events,
+        });
+      }
+    } catch (error) {
+      res.status(500).json({
+        message: "Error getting personalized events",
         error,
       });
     }
