@@ -23,6 +23,9 @@ export class Society extends BaseEntity {
   @Column()
   description!: string;
 
+  @Column({ nullable: true })
+  logo?: string;
+
   @Column({ type: "enum", enum: SocietyType, default: SocietyType.OTHERS })
   type!: SocietyType;
 

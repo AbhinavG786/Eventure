@@ -36,7 +36,7 @@ class AnnouncementController {
   sendAnnouncement = async (req: express.Request, res: express.Response) => {
     const { content } = req.body;
     if (!content) {
-       res.status(400).json({ message: "Content is required" });
+      res.status(400).json({ message: "Content is required" });
     }
     const allUsers = await AppDataSource.getRepository(User).find({
       select: ["id"],
@@ -90,14 +90,27 @@ class AnnouncementController {
   };
 
   getAnnouncements = async (req: express.Request, res: express.Response) => {
-    const announcements = await AppDataSource.getRepository(Announcement).find({
+    const { skip, take } = req.pagination!;
+    const [announcements, total] = await AppDataSource.getRepository(
+      Announcement
+    ).findAndCount({
       order: { createdAt: "DESC" },
-      relations:["event","society"]
+      relations: ["event", "society"],
+      skip,
+      take,
     });
+    const hasMore = skip + take < total;
     if (!announcements || announcements.length === 0) {
-       res.status(404).json({ message: "No announcements found" });
+      res.status(404).json({ message: "No announcements found" });
     }
-    res.status(200).json({ announcements });
+    res
+      .status(200)
+      .json({
+        announcements,
+        hasMore,
+        currentPage: req.pagination!.page,
+        totalPages: Math.ceil(total / take),
+      });
   };
 }
 

@@ -7,7 +7,7 @@ import express from "express";
 class SearchController {
   searchEvents = async (req: express.Request, res: express.Response) => {
     const { query, upcoming, type, startDate, endDate } = req.query;
-
+    const { skip, take } = req.pagination!;
     try {
       const where: any = [];
 
@@ -47,15 +47,24 @@ class SearchController {
         };
       }
 
-      const events = await AppDataSource.getRepository(EventEntity).find({
+      const [events, total] = await AppDataSource.getRepository(
+        EventEntity
+      ).findAndCount({
         where: where.length
           ? where.map((condition: any) => ({ ...filters, ...condition }))
           : filters,
         relations: ["society"],
         order: { startTime: "ASC" },
+        skip,
+        take,
       });
-
-      res.status(200).json(events);
+      const hasMore = skip + take < total;
+      res.status(200).json({
+        events,
+        hasMore,
+        currentPage: req.pagination!.page,
+        totalPages: Math.ceil(total / take),
+      });
     } catch (error) {
       console.error(error);
       res.status(500).json({ msg: "Server error" });
@@ -64,6 +73,7 @@ class SearchController {
 
   filterBySocietyType = async (req: express.Request, res: express.Response) => {
     const { type } = req.query;
+    const { skip, take } = req.pagination!;
     try {
       let societyType: SocietyType | undefined;
       if (
@@ -73,7 +83,9 @@ class SearchController {
         societyType = type as SocietyType;
       }
 
-      const events = await AppDataSource.getRepository(EventEntity).find({
+      const [events, total] = await AppDataSource.getRepository(
+        EventEntity
+      ).findAndCount({
         where: societyType
           ? {
               society: {
@@ -83,8 +95,18 @@ class SearchController {
           : {},
         relations: ["society"],
         order: { startTime: "ASC" },
+        skip,
+        take,
       });
-      res.status(200).json(events);
+      const hasMore = skip + take < total;
+      res
+        .status(200)
+        .json({
+          events,
+          hasMore,
+          currentPage: req.pagination!.page,
+          totalPages: Math.ceil(total / take),
+        });
     } catch (error) {
       console.error(error);
       res.status(500).json({ msg: "Server error" });

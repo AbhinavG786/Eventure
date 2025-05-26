@@ -82,13 +82,23 @@ class EventController {
   };
 
   getAllEvents = async (req: express.Request, res: express.Response) => {
+    const { skip, take } = req.pagination!;
     try {
-      const events = await AppDataSource.getRepository(EventEntity).find({
+      const [events, total] = await AppDataSource.getRepository(
+        EventEntity
+      ).findAndCount({
         relations: ["society", "createdBy"],
+        order: { startTime: "ASC" },
+        skip,
+        take,
       });
+      const hasMore = skip + take < total;
       res.status(200).json({
         message: "Events found",
         events,
+        hasMore,
+        currentPage: req.pagination!.page,
+        totalPages: Math.ceil(total / take),
       });
     } catch (error) {
       res.status(500).json({
@@ -133,9 +143,12 @@ class EventController {
   };
 
   getUpcomingEvents = async (req: express.Request, res: express.Response) => {
+    const { skip, take } = req.pagination!;
     const presentDate = new Date();
     try {
-      const events = await AppDataSource.getRepository(EventEntity).find({
+      const [events, total] = await AppDataSource.getRepository(
+        EventEntity
+      ).findAndCount({
         where: {
           startTime: MoreThanOrEqual(presentDate),
         },
@@ -143,10 +156,16 @@ class EventController {
           startTime: "ASC",
         },
         relations: ["society", "createdBy"],
+        skip,
+        take,
       });
+      const hasMore = skip + take < total;
       res.status(200).json({
         message: "Upcoming events found",
         events,
+        hasMore,
+        currentPage: req.pagination!.page,
+        totalPages: Math.ceil(total / take),
       });
     } catch (error) {
       res.status(500).json({
@@ -352,6 +371,7 @@ class EventController {
     res: express.Response
   ) => {
     const { userId } = req.params;
+    const { skip, take } = req.pagination!;
 
     try {
       const user = await AppDataSource.getRepository(User).findOne({
@@ -372,7 +392,9 @@ class EventController {
             .json({ message: "No followed societies", events: [] });
         }
 
-        const events = await AppDataSource.getRepository(EventEntity).find({
+        const [events, total] = await AppDataSource.getRepository(
+          EventEntity
+        ).findAndCount({
           where: {
             society: { id: In(followedSocieties) },
             startTime: MoreThanOrEqual(new Date()),
@@ -381,11 +403,17 @@ class EventController {
           order: {
             startTime: "ASC",
           },
+          skip,
+          take,
         });
+        const hasMore = skip + take < total;
 
         res.status(200).json({
           message: "Personalized events found",
           events,
+          hasMore,
+          currentPage: req.pagination!.page,
+          totalPages: Math.ceil(total / take),
         });
       }
     } catch (error) {
@@ -396,11 +424,11 @@ class EventController {
     }
   };
 
-  getTrendingEvents = async (req:express.Request,res:express.Response) => {
+  getTrendingEvents = async (req: express.Request, res: express.Response) => {
     try {
       const cached = await redisClient.get(TRENDING_CACHE_KEY);
       if (cached) {
-         res.status(200).json({
+        res.status(200).json({
           message: "Trending events (from cache)",
           events: JSON.parse(cached),
         });
@@ -427,12 +455,12 @@ class EventController {
         JSON.stringify(trendingEvents)
       );
 
-       res.status(200).json({
+      res.status(200).json({
         message: "Trending events (from DB)",
         events: trendingEvents,
       });
     } catch (error) {
-       res.status(500).json({
+      res.status(500).json({
         message: "Internal server error",
         error,
       });
