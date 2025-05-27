@@ -5,3 +5,5 @@ const router = Router();
 
 router.route("/follow").post(follower.followSociety);
 router.route("/unfollow").post(follower.unfollowSociety);
+
+export default router;
