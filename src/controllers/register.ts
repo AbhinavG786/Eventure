@@ -12,6 +12,7 @@ class RegistrationController {
     res: express.Response
   ) => {
     const { userId, eventId, registrationStatus } = req.body;
+    // const usedId=req.user?.userId;
     try {
       const registration = new Registration();
       const user = await AppDataSource.getRepository(User).findOne({

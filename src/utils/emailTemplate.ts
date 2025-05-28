@@ -43,7 +43,7 @@ export const generateEmailTemplate = (type: TemplateType, token: string) => {
     <div class="container">
       <h2>Verify Your Email Address</h2>
       <p>Use the OTP below to complete your sign-up process.</p>
-      <div class="otp">{token}</div>
+      <div class="otp">${token}</div>
       <p>This OTP will expire in 5 minutes.</p>
       <p>If you didn't request this, you can safely ignore this email.</p>
       <div class="footer">
