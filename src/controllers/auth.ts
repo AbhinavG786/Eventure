@@ -31,10 +31,28 @@ class AuthController {
       }
 
       const savedUser = await AppDataSource.getRepository(User).save(user);
-      await imagekit.moveFile({
-        sourceFilePath: `/temp/profile_${sessionId}.jpg`,
-        destinationPath: `/users/${user.id}/profile.jpg`,
-      });
+      // await imagekit.moveFile({
+      //   sourceFilePath: `/temp/profile_${sessionId}.jpg`,
+      //   destinationPath: `/users/${user.id}/profile.jpg`,
+      // });
+      // const cleanUserId = savedUser.id.replace(/[^a-zA-Z0-9-]/g, "");
+//       const cleanUserId = savedUser.id.replace(/[^a-zA-Z0-9\-\p{L}]/gu, '');
+// console.log('Cleaned user ID:', cleanUserId);
+// console.log("Moving file to:", `users/${cleanUserId}/profile.jpg`);
+
+
+//       await imagekit.moveFile({
+//         sourceFilePath: `/temp/profile_${sessionId}.jpg`,
+//         destinationPath: `/users/${cleanUserId}/profile.jpg`,
+//       });
+
+// const folderSafeUserId = savedUser.id.replace(/[^a-zA-Z0-9]/g, '');
+// await imagekit.moveFile({
+//   sourceFilePath: `/temp/profile_${sessionId}.jpg`,
+//   // destinationPath: `users_profile_${folderSafeUserId}.jpg`,
+//   destinationPath: `users/test123.jpg`,
+// });
+
       const accessToken = jwt.sign(
         { id: user.id, email: user.email },
         process.env.JWT_ACCESS_SECRET as string,
