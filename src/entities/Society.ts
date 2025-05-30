@@ -29,7 +29,7 @@ export class Society extends BaseEntity {
   @Column({ type: "enum", enum: SocietyType, default: SocietyType.OTHERS })
   type!: SocietyType;
 
-  @OneToOne(() => User, { cascade: true })
+  @OneToOne(() => User, { cascade: true, onDelete: "CASCADE" })
   @JoinColumn()
   admin!: User;
 

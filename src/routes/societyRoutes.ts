@@ -8,6 +8,6 @@ router.route("/all").get(society.getAllSocieties);
 router.route("/:id").get(society.getSocietyById);
 router.route("/:id").patch(society.updateSocietyById);
 router.route("/:id").delete(society.deleteSocietyById);
-router.route("/upload/:id").post(upload.single("logo"),society.uploadSocietyLogo)
+router.route("/upload").post(upload.single("logo"),society.uploadSocietyLogoBeforeSignUp)
 
 export default router;

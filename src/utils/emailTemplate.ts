@@ -54,8 +54,8 @@ export const generateEmailTemplate = (type: TemplateType, token: string) => {
 </html>
 `,
     registration: ``,
-    passwordReset:`
-    <!DOCTYPE html>
+   passwordReset: `
+<!DOCTYPE html>
 <html>
   <head>
     <meta charset="UTF-8" />
@@ -83,16 +83,6 @@ export const generateEmailTemplate = (type: TemplateType, token: string) => {
         color: #555555;
         line-height: 1.5;
       }
-      .button {
-        display: inline-block;
-        margin-top: 20px;
-        padding: 12px 20px;
-        background-color: #007bff;
-        color: #ffffff !important;
-        text-decoration: none;
-        border-radius: 5px;
-        font-weight: bold;
-      }
       .footer {
         margin-top: 30px;
         font-size: 12px;
@@ -109,7 +99,13 @@ export const generateEmailTemplate = (type: TemplateType, token: string) => {
         We received a request to reset your password. Click the button below to
         choose a new password. This link is valid for 5 minutes.
       </p>
-      <a href="{{token}}" class="button">Reset Password</a>
+      <table cellpadding="0" cellspacing="0" border="0" style="margin-top: 20px;">
+        <tr>
+          <td align="center" bgcolor="#007bff" style="border-radius: 5px;">
+            <a href="{{token}}" target="_blank" style="display: inline-block; padding: 12px 20px; font-family: Arial, sans-serif; font-size: 16px; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;">Reset Password</a>
+          </td>
+        </tr>
+      </table>
       <p>If you did not request a password reset, you can safely ignore this email.</p>
       <div class="footer">
         <p>&copy; Eventure. All rights reserved.</p>
@@ -117,8 +113,7 @@ export const generateEmailTemplate = (type: TemplateType, token: string) => {
     </div>
   </body>
 </html>
-
-    `
+`
   };
   return templates[type];
 };

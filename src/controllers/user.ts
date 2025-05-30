@@ -60,8 +60,8 @@ class UserController {
         res.status(404).json({ message: "User not found" });
       } else {
         await AppDataSource.getRepository(User).remove(user);
-      }
       res.status(200).json({ message: "User deleted successfully" });
+      }
     } catch (error) {
       res.status(500).json({ message: "Error deleting user", error });
     }
