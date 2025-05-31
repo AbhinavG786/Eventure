@@ -255,7 +255,10 @@ class AuthController {
     req: express.Request,
     res: express.Response
   ) => {
-    const { token, userId } = req.params;
+    // const { token, userId } = req.params;
+    const {token}=req.params;
+    const userId=req.user?.id;
+    // const userId = (req.user as { id: string })?.id;
     try {
       const user = await AppDataSource.getRepository(User).findOne({
         where: { id: userId },

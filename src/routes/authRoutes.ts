@@ -10,7 +10,7 @@ router.route("/token").post(auth.token);
 router.route("/send-otp").post(auth.sendOtpToEmail)
 router.route("/verify-otp").post(auth.verifyOtp)
 router.route("/request-reset").post(auth.requestPasswordReset)
-router.route("/verify/:userId/:token").post(auth.verifyPasswordResetToken)
+router.route("/verify/:token").post(authMiddleware.verifyToken,auth.verifyPasswordResetToken)
 router.route("/reset/:userId").post(auth.resetPassword)
 
 export default router;
