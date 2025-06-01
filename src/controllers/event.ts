@@ -12,8 +12,9 @@ const TRENDING_CACHE_KEY = "trending_events";
 
 class EventController {
   createEvent = async (req: express.Request, res: express.Response) => {
-    const { name, description, venue, startTime, endTime, societyId, userId } =
+    const { name, description, venue, startTime, endTime, societyId} =
       req.body;
+      const userId=req.user?.id
     try {
       const event = new EventEntity();
       const society = await AppDataSource.getRepository(Society).findOne({
@@ -234,8 +235,8 @@ class EventController {
   };
 
   toggleBookmarkEvent = async (req: express.Request, res: express.Response) => {
-    const { userId, eventId } = req.body;
-
+    const { eventId } = req.params;
+    const userId=req.user?.id
     try {
       const user = await AppDataSource.getRepository(User).findOneBy({
         id: userId,
@@ -275,7 +276,7 @@ class EventController {
   };
 
   getBookmarkedEvents = async (req: express.Request, res: express.Response) => {
-    const { userId } = req.params;
+    const userId=req.user?.id
 
     try {
       const bookmarks = await AppDataSource.getRepository(Bookmark).find({
@@ -370,9 +371,8 @@ class EventController {
     req: express.Request,
     res: express.Response
   ) => {
-    const { userId } = req.params;
     const { skip, take } = req.pagination!;
-
+    const userId=req.user?.id
     try {
       const user = await AppDataSource.getRepository(User).findOne({
         where: { id: userId },

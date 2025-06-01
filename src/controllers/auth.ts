@@ -52,11 +52,12 @@ class AuthController {
       //   destinationPath: `users/test123.jpg`,
       // });
 
-      const accessToken = jwt.sign(
-        { id: user.id, email: user.email },
-        process.env.JWT_ACCESS_SECRET as string,
-        { expiresIn: parseInt(process.env.JWT_TOKEN_EXPIRY || "3600", 10) }
-      );
+      const expiryInDays=parseInt(process.env.JWT_TOKEN_EXPIRY || "3",10);
+        const accessToken = jwt.sign(
+          { id: user.id, email: user.email },
+          process.env.JWT_ACCESS_SECRET as string,
+          { expiresIn: `${expiryInDays}d` }
+        );
 
       res.status(201).json({
         message: "User created successfully",
@@ -112,11 +113,12 @@ class AuthController {
       const societyAdmin = await AppDataSource.getRepository(Society).save(
         society
       );
-      const accessToken = jwt.sign(
-        { id: user.id, email: user.email },
-        process.env.JWT_ACCESS_SECRET as string,
-        { expiresIn: parseInt(process.env.JWT_TOKEN_EXPIRY || "3600", 10) }
-      );
+      const expiryInDays=parseInt(process.env.JWT_TOKEN_EXPIRY || "3",10);
+        const accessToken = jwt.sign(
+          { id: user.id, email: user.email },
+          process.env.JWT_ACCESS_SECRET as string,
+          { expiresIn: `${expiryInDays}d` }
+        );
 
       res.status(201).json({
         message: "Society admin created successfully",
@@ -155,10 +157,11 @@ class AuthController {
         if (!checkPasswordValidation) {
           res.status(401).json({ message: "Invalid email or password" });
         }
+        const expiryInDays=parseInt(process.env.JWT_TOKEN_EXPIRY || "3",10);
         const accessToken = jwt.sign(
           { id: user.id, email: user.email },
           process.env.JWT_ACCESS_SECRET as string,
-          { expiresIn: parseInt(process.env.JWT_TOKEN_EXPIRY || "3600", 10) }
+          { expiresIn: `${expiryInDays}d` }
         );
         res.status(200).json({
           message: "Login successful",

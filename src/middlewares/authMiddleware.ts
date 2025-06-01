@@ -8,7 +8,7 @@ class AuthMiddleware {
     res: express.Response,
     next: express.NextFunction
   ) => {
-    try {
+    try {      
       const authHeader = req.headers["authorization"];
       const token = authHeader && authHeader.split(" ")[1];
       if (token == null) {
@@ -18,11 +18,9 @@ class AuthMiddleware {
           token,
           process.env.JWT_ACCESS_SECRET as string
         )as { id: string };
-        console.log("Decoded Token:", decodedToken);
         
         if (decodedToken) {
           req.user = decodedToken;
-          console.log(req.user);
           
           // req.user = { id: decodedToken.id };
           return next();

@@ -14,6 +14,8 @@ import { Announcement } from "./Announcement";
 import { Bookmark } from "./bookmark";
 
 @Entity()
+@Check(`"rating" >= 1 AND "rating" <= 5`)
+@Check(`"startTime" < "endTime"`)
 export class EventEntity extends BaseEntity {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
@@ -27,8 +29,7 @@ export class EventEntity extends BaseEntity {
   @Column("text")
   venue!: string;
 
-  @Column("int", { default: 0 })
-  @Check(`"rating" >= 1 AND "rating" <= 5`)
+  @Column("int", { default: 1 })
   rating!: number;
 
   @Column({ type: "timestamp" })
