@@ -8,6 +8,7 @@ import searchRoutes from "./searchRoutes"
 import oauthRoutes from "./oauthRoutes"
 import societyRoutes from "./societyRoutes"
 import { Router } from "express"
+import authMiddleware from "../middlewares/authMiddleware"
 
 const router=Router();
 

@@ -4,6 +4,7 @@ import { imagekit } from "../utils/imageKit";
 import { AppDataSource } from "../data-source";
 import { v4 as uuidv4 } from "uuid";
 import redisClient from "../utils/redis";
+import { SocietyType } from "../entities/enum/societyType";
 
 class SocietyController {
   createSociety = async (req: express.Request, res: express.Response) => {
@@ -54,7 +55,9 @@ class SocietyController {
 
   getAllSocieties = async (req: express.Request, res: express.Response) => {
     try {
-      const societies = await AppDataSource.getRepository(Society).find();
+      const societies = await AppDataSource.getRepository(Society).find({relations:[
+        "admin","followers", "events", "announcements"
+      ]});
       res.status(200).json({
         message: "Societies found",
         societies,
@@ -69,8 +72,12 @@ class SocietyController {
 
   updateSocietyById = async (req: express.Request, res: express.Response) => {
     const { id } = req.params;
-    const { name, description } = req.body;
+    const { name, description, societyType } = req.body;
     try {
+      if (societyType && !Object.values(SocietyType).includes(societyType)) {
+        res.status(400).json({ message: "Invalid society type" });
+        return;
+      }
       const society = await AppDataSource.getRepository(Society).findOne({
         where: { id },
       });
@@ -81,6 +88,7 @@ class SocietyController {
       } else {
         society.name = name;
         society.description = description;
+        society.type = societyType;
         const updatedSociety = await AppDataSource.getRepository(Society).save(
           society
         );
@@ -121,35 +129,40 @@ class SocietyController {
     }
   };
 
-  uploadSocietyLogoBeforeSignUp = async (req: express.Request, res: express.Response) => {
-      const sessionId=uuidv4();
-      try {
-          const file = req.file;
-          if (!file) {
-            res.status(400).json({ message: "No file uploaded" });
-          } else {
-            const uploadedSocietyLogo = await imagekit.upload({
-              file: file.buffer,
-              fileName: `society-${sessionId}.jpg`,
-              folder: "/society-pics",
-            });
-             await redisClient.set(`signup:logo:${sessionId}`, uploadedSocietyLogo.url, {
-      EX: 600 // Expiry time in seconds
-    });
-            res.status(200).json({
-              message: "Society logo uploaded successfully",
-              sessionId
-            });
+  uploadSocietyLogoBeforeSignUp = async (
+    req: express.Request,
+    res: express.Response
+  ) => {
+    const sessionId = uuidv4();
+    try {
+      const file = req.file;
+      if (!file) {
+        res.status(400).json({ message: "No file uploaded" });
+      } else {
+        const uploadedSocietyLogo = await imagekit.upload({
+          file: file.buffer,
+          fileName: `society-${sessionId}.jpg`,
+          folder: "/society-pics",
+        });
+        await redisClient.set(
+          `signup:logo:${sessionId}`,
+          uploadedSocietyLogo.url,
+          {
+            EX: 600, // Expiry time in seconds
           }
-        }
-        catch (error) {
-        res.status(500).json({
-          message: "Error uploading society logo",
-          error,
+        );
+        res.status(200).json({
+          message: "Society logo uploaded successfully",
+          sessionId,
         });
       }
-    };
-
-  }
+    } catch (error) {
+      res.status(500).json({
+        message: "Error uploading society logo",
+        error,
+      });
+    }
+  };
+}
 
 export default new SocietyController();

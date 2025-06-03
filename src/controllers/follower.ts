@@ -6,7 +6,8 @@ import { Society } from "../entities/Society";
 
 class FollowerController {
   followSociety = async (req: express.Request, res: express.Response) => {
-    const { userId, societyId } = req.body;
+    const { societyId } = req.body;
+    const userId=req.user?.id
     if (!userId || !societyId)
       res.status(400).json({ message: "User ID and Society ID are required" });
     else {
@@ -45,7 +46,8 @@ class FollowerController {
   };
 
   unfollowSociety = async (req: express.Request, res: express.Response) => {
-    const { userId, societyId } = req.body;
+    const { societyId } = req.body;
+    const userId=req.user?.id
 
     try {
       const follower = await AppDataSource.getRepository(Follower).findOne({

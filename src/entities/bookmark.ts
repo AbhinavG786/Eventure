@@ -18,6 +18,8 @@ export class Bookmark extends BaseEntity {
   @ManyToOne(() => User, (user) => user.bookmarks)
   user!: User;
 
-  @ManyToOne(() => EventEntity, (event) => event.bookmarks)
+  @ManyToOne(() => EventEntity, (event) => event.bookmarks, {
+    onDelete: "CASCADE",
+  })
   event!: EventEntity;
 }

@@ -41,7 +41,10 @@ export class EventEntity extends BaseEntity {
   @Column({ nullable: true })
   eventPic?: string;
 
-  @OneToMany(() => Bookmark, (bookmark) => bookmark.event)
+  @OneToMany(() => Bookmark, (bookmark) => bookmark.event, {
+    cascade: true,
+    onDelete: "CASCADE",
+  })
   bookmarks!: Bookmark[];
 
   @ManyToOne(() => Society, (society) => society.events)

@@ -18,8 +18,16 @@ webPush.setVapidDetails(
 );
 class AnnouncementController {
   subscribeUser = async (req: express.Request, res: express.Response) => {
-    const { userId, subscription } = req.body;
+    const { subscription } = req.body;
+    const userId = req.user?.id;
+
     try {
+      if (!subscription || !userId) {
+        res
+          .status(400)
+          .json({ message: "Subscription and User ID are required" });
+        return;
+      }
       const subObj = await saveSubscription(userId, subscription);
       if (subObj) {
         res
@@ -103,14 +111,12 @@ class AnnouncementController {
     if (!announcements || announcements.length === 0) {
       res.status(404).json({ message: "No announcements found" });
     }
-    res
-      .status(200)
-      .json({
-        announcements,
-        hasMore,
-        currentPage: req.pagination!.page,
-        totalPages: Math.ceil(total / take),
-      });
+    res.status(200).json({
+      announcements,
+      hasMore,
+      currentPage: req.pagination!.page,
+      totalPages: Math.ceil(total / take),
+    });
   };
 }
 

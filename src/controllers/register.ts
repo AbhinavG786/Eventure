@@ -11,9 +11,20 @@ class RegistrationController {
     req: express.Request,
     res: express.Response
   ) => {
-    const { userId, eventId, registrationStatus } = req.body;
-    // const usedId=req.user?.userId;
+    const { eventId, registrationStatus } = req.body;
+    const userId = req.user?.id;
     try {
+      if (
+        !eventId ||
+        !userId ||
+        !Object.values(RegistrationStatus).includes(registrationStatus)
+      ) {
+        res.status(400).json({
+          message:
+            "Event ID, User ID and Proper Registration Status are required",
+        });
+        return;
+      }
       const registration = new Registration();
       const user = await AppDataSource.getRepository(User).findOne({
         where: { id: userId },
