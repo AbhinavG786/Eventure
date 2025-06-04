@@ -13,7 +13,7 @@ class SearchController {
 
       if (query) {
         where.push({
-          title: ILike(`%${query}%`),
+          name: ILike(`%${query}%`),
         });
 
         where.push({

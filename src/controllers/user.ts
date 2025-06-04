@@ -71,7 +71,7 @@ class UserController {
     req: express.Request,
     res: express.Response
   ) => {
-    const { userId } = req.body;
+    const userId=req.user?.id
     if (!userId) res.status(401).json({ message: "UserId not found" });
     try {
       const userWithRegistrations = await AppDataSource.getRepository(

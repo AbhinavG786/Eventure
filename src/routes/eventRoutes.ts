@@ -5,7 +5,7 @@ import paginationMiddleware from "../middlewares/paginationMiddleware";
 import authMiddleware from "../middlewares/authMiddleware";
 const router = Router();
 
-router.route("/").post(event.createEvent);
+router.route("/").post(authMiddleware.verifyToken,event.createEvent);
 router.route("/all").get(paginationMiddleware(10, 50),event.getAllEvents);
 router.route("/upcoming").get(paginationMiddleware(10, 50),event.getUpcomingEvents);
 router.route("/society/:societyId").get(event.getEventsBySocietyId);
