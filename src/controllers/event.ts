@@ -424,48 +424,113 @@ class EventController {
     }
   };
 
+  // getTrendingEvents = async (req: express.Request, res: express.Response) => {
+
+  //   try {
+  //     const cached = await redisClient.get(TRENDING_CACHE_KEY);
+  //     if (cached) {
+  //       res.status(200).json({
+  //         message: "Trending events (from cache)",
+  //         events: JSON.parse(cached),
+  //       });
+  //     }
+
+  //     const sinceDate = new Date(Date.now() - 24 * 60 * 60 * 1000); // last 24 hours
+
+  //     const trendingEvents = await AppDataSource.getRepository(EventEntity)
+  //       .createQueryBuilder("event")
+  //       .leftJoinAndSelect("event.registrations", "registration")
+  //       .leftJoinAndSelect("event.society", "society")
+  //       .leftJoinAndSelect("event.createdBy", "creator")
+  //       .where("registration.createdAt >= :sinceDate", { sinceDate })
+  //       .groupBy("event.id")
+  //       .addGroupBy("society.id")
+  //       .addGroupBy("creator.id")
+  //       .orderBy("COUNT(registration.id)", "DESC")
+  //       .limit(10)
+  //       .getMany();
+
+  //     await redisClient.setEx(
+  //       TRENDING_CACHE_KEY,
+  //       300, // 5 minutes
+  //       JSON.stringify(trendingEvents)
+  //     );
+
+  //     res.status(200).json({
+  //       message: "Trending events (from DB)",
+  //       events: trendingEvents,
+  //     });
+  //   } catch (error) {
+  //     res.status(500).json({
+  //       message: "Internal server error",
+  //       error,
+  //     });
+  //   }
+  // };
+
   getTrendingEvents = async (req: express.Request, res: express.Response) => {
-    try {
-      const cached = await redisClient.get(TRENDING_CACHE_KEY);
-      if (cached) {
-        res.status(200).json({
-          message: "Trending events (from cache)",
-          events: JSON.parse(cached),
-        });
-      }
-
-      const sinceDate = new Date(Date.now() - 24 * 60 * 60 * 1000); // last 24 hours
-
-      const trendingEvents = await AppDataSource.getRepository(EventEntity)
-        .createQueryBuilder("event")
-        .leftJoinAndSelect("event.registrations", "registration")
-        .leftJoinAndSelect("event.society", "society")
-        .leftJoinAndSelect("event.createdBy", "creator")
-        .where("registration.createdAt >= :sinceDate", { sinceDate })
-        .groupBy("event.id")
-        .addGroupBy("society.id")
-        .addGroupBy("creator.id")
-        .orderBy("COUNT(registration.id)", "DESC")
-        .limit(10)
-        .getMany();
-
-      await redisClient.setEx(
-        TRENDING_CACHE_KEY,
-        300, // 5 minutes
-        JSON.stringify(trendingEvents)
-      );
-
-      res.status(200).json({
-        message: "Trending events (from DB)",
-        events: trendingEvents,
+  try {
+    const cached = await redisClient.get(TRENDING_CACHE_KEY);
+    if (cached) {
+       res.status(200).json({
+        message: "Trending events (from cache)",
+        events: JSON.parse(cached),
       });
-    } catch (error) {
-      res.status(500).json({
-        message: "Internal server error",
-        error,
-      });
+      return
     }
-  };
+
+    const sinceDate = new Date(Date.now() - 24 * 60 * 60 * 1000); // last 24 hrs
+
+    // Step 1: Get top 10 event IDs with most registrations
+   const topEventIdsResult = await AppDataSource.getRepository(EventEntity)
+  .createQueryBuilder("event")
+  .leftJoin("event.registrations", "registration")
+  .select("event.id", "eventId")
+  .addSelect("COUNT(registration.id)", "regCount")
+  .where("registration.createdAt >= :sinceDate", { sinceDate })
+  .groupBy("event.id")
+  .orderBy("COUNT(registration.id)", "DESC") // ✅ FIXED
+  .limit(10)
+  .getRawMany();
+
+
+    const topEventIds = topEventIdsResult.map(e => e.eventId);
+
+    if (!topEventIds.length) {
+       res.status(200).json({ message: "No trending events", events: [] });
+       return
+    }
+
+    // Step 2: Fetch full event details
+    const trendingEvents = await AppDataSource.getRepository(EventEntity).find({
+      where: { id: In(topEventIds) },
+      relations: ["society", "createdBy", "registrations"],
+    });
+
+    // Optional: Sort again to preserve order as per regCount
+    trendingEvents.sort(
+      (a, b) => topEventIds.indexOf(a.id) - topEventIds.indexOf(b.id)
+    );
+
+    await redisClient.setEx(
+      TRENDING_CACHE_KEY,
+      300, // 5 min
+      JSON.stringify(trendingEvents)
+    );
+
+     res.status(200).json({
+      message: "Trending events (from DB)",
+      events: trendingEvents,
+    });
+  } catch (error) {
+    console.error(error);
+     res.status(500).json({
+      message: "Internal server error",
+      error,
+    });
+  }
+};
+
 }
 
 export default new EventController();
