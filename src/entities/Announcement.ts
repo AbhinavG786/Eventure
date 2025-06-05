@@ -1,25 +1,34 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, BaseEntity } from 'typeorm';
-import { User } from './User';
-import { EventEntity } from './EventEntity';
-import { Society } from './Society';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  BaseEntity,
+} from "typeorm";
+import { User } from "./User";
+import { EventEntity } from "./EventEntity";
+import { Society } from "./Society";
 
 @Entity()
 export class Announcement extends BaseEntity {
-    @PrimaryGeneratedColumn('uuid')
-    id!: string;
+  @PrimaryGeneratedColumn("uuid")
+  id!: string;
 
-    @Column('text')
-    content!: string;
+  @Column("text")
+  title!: string;
 
-    @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-    createdAt!: Date;
+  @Column("text")
+  content!: string;
 
-    @ManyToOne(() => User, user => user.announcements)
-    user!: User;
+  @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
+  createdAt!: Date;
 
-    @ManyToOne(() => EventEntity, event => event.announcements)
-    event!: EventEntity;
+  @ManyToOne(() => User, (user) => user.announcements)
+  user!: User;
 
-    @ManyToOne(()=>Society, (society) => society.announcements)
-    society!: Society;
+  @ManyToOne(() => EventEntity, (event) => event.announcements)
+  event!: EventEntity;
+
+  @ManyToOne(() => Society, (society) => society.announcements)
+  society!: Society;
 }

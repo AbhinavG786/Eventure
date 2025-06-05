@@ -2,3 +2,5 @@
 /node_modules
 pgdata/
 dist/
+firebase/serviceAccountKey.json
+removed_files/

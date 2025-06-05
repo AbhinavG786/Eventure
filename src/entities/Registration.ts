@@ -3,7 +3,7 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
-  OneToMany,
+  CreateDateColumn,
   BaseEntity,
 } from "typeorm";
 import { User } from "./User";
@@ -13,6 +13,9 @@ import { RegistrationStatus } from "./enum/registrationStatus";
 export class Registration extends BaseEntity {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
+
+  @CreateDateColumn()
+  createdAt!: Date;
 
   @ManyToOne(() => User, (user) => user.registrations)
   user!: User;

@@ -6,7 +6,7 @@ import { EventEntity } from "./entities/EventEntity";
 import { Registration } from "./entities/Registration";
 import { Society } from "./entities/Society";
 import { Announcement } from "./entities/Announcement";
-import { Subscription } from "./entities/Subscriptions";
+// import { Subscription } from "./entities/Subscriptions";
 import { Follower } from "./entities/Follower";
 import { Bookmark } from "./entities/bookmark";
 
@@ -25,7 +25,6 @@ export const AppDataSource = new DataSource({
     EventEntity,
     Announcement,
     Registration,
-    Subscription,
     Follower,
     Bookmark,
   ],

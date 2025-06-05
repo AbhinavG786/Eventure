@@ -11,7 +11,7 @@ import { Announcement } from "./Announcement";
 import { EventEntity } from "./EventEntity";
 import { UserRole } from "./enum/userRole";
 import { Society } from "./Society";
-import { Subscription } from "./Subscriptions";
+// import { Subscription } from "./Subscriptions";
 import { LoginProvider } from "./enum/loginProvider";
 import { Follower } from "./Follower";
 import { Bookmark } from "./bookmark";
@@ -60,8 +60,8 @@ export class User extends BaseEntity {
   @OneToMany(() => EventEntity, (event) => event.createdBy)
   events!: EventEntity[];
 
-  @OneToMany(() => Subscription, (subscription) => subscription.user)
-  subscriptions!: Subscription[];
+  // @OneToMany(() => Subscription, (subscription) => subscription.user)
+  // subscriptions!: Subscription[];
 
   @OneToMany(() => Registration, (registration) => registration.user)
   registrations!: Registration[];
