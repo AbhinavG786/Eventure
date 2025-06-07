@@ -295,8 +295,9 @@ class AuthController {
   };
 
   resetPassword = async (req: express.Request, res: express.Response) => {
-    const { oldPassword, newPassword } = req.body;
-    const { userId } = req.params;
+    const { newPassword } = req.body;
+    // const { userId } = req.params;
+    const userId=req.user?.id
     try {
       const user = await AppDataSource.getRepository(User).findOne({
         where: { id: userId },
@@ -304,18 +305,18 @@ class AuthController {
       if (!user) {
         res.status(400).json({ message: "User not found" });
       } else {
-        const checkPasswordValidation = await bcrypt.compare(
-          oldPassword,
-          user.password
-        );
-        if (!checkPasswordValidation) {
-          res.status(400).json({ message: "Old password is incorrect" });
-        } else {
+        // const checkPasswordValidation = await bcrypt.compare(
+        //   oldPassword,
+        //   user.password
+        // );
+        // if (!checkPasswordValidation) {
+        //   res.status(400).json({ message: "Old password is incorrect" });
+        // } else {
           const hashedPassword = await bcrypt.hash(newPassword, 10);
           user.password = hashedPassword;
           await AppDataSource.getRepository(User).save(user);
           res.status(200).json({ message: "Password reset successfully" });
-        }
+        // }
       }
     } catch (error) {
       res.status(500).json({ message: "Error resetting password", error });

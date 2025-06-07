@@ -102,7 +102,7 @@ export const generateEmailTemplate = (type: TemplateType, token: string) => {
       <table cellpadding="0" cellspacing="0" border="0" style="margin-top: 20px;">
         <tr>
           <td align="center" bgcolor="#007bff" style="border-radius: 5px;">
-            <a href="{{token}}" target="_blank" style="display: inline-block; padding: 12px 20px; font-family: Arial, sans-serif; font-size: 16px; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;">Reset Password</a>
+            <a href="${token}" target="_blank" style="display: inline-block; padding: 12px 20px; font-family: Arial, sans-serif; font-size: 16px; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;">Reset Password</a>
           </td>
         </tr>
       </table>

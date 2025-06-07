@@ -50,7 +50,9 @@ export class EventEntity extends BaseEntity {
   @ManyToOne(() => Society, (society) => society.events)
   society!: Society;
 
-  @ManyToOne(() => User, (user) => user.events)
+  @ManyToOne(() => User, (user) => user.events, {
+    onDelete: "CASCADE",
+  })
   createdBy!: User;
 
   @OneToMany(() => Registration, (registration) => registration.event)

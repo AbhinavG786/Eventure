@@ -57,7 +57,10 @@ export class User extends BaseEntity {
   @OneToMany(() => Follower, (follower) => follower.user)
   following!: Follower[];
 
-  @OneToMany(() => EventEntity, (event) => event.createdBy)
+  @OneToMany(() => EventEntity, (event) => event.createdBy,{
+    cascade: true,
+    onDelete: "CASCADE",
+  })
   events!: EventEntity[];
 
   // @OneToMany(() => Subscription, (subscription) => subscription.user)

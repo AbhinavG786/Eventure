@@ -4,26 +4,31 @@ import router from "./routes/index";
 import session from "express-session";
 import express from "express";
 // import dotenv from "dotenv";
-import passport from "./utils/passport";
+// import passport from "./utils/passport";
 import http from "http";
 
 // dotenv.config();
 const app = express();
 
-app.use(
-  session({
-    secret: "your-session-secret",
-    resave: false,
-    saveUninitialized: false,
-  })
-);
+// app.use(
+//   session({
+//     secret: "your-session-secret",
+//     resave: false,
+//     saveUninitialized: false,
+//   })
+// );
 
-app.use(passport.initialize());
-app.use(passport.session());
+// app.use(passport.initialize());
+// app.use(passport.session());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/", router);
+app.post("/", (req, res) => {
+  res.send(
+    '<h1>Welcome to Eventure</h1><a href="/auth/google">Login with Google</a>',
+  );
+});
 
 AppDataSource.initialize()
   .then(() => {
