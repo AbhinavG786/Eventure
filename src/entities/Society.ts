@@ -33,12 +33,21 @@ export class Society extends BaseEntity {
   @JoinColumn()
   admin!: User;
 
-  @OneToMany(() => Follower, (follower) => follower.society)
+  @OneToMany(() => Follower, (follower) => follower.society,{
+    cascade: true,
+    onDelete: "CASCADE",
+  })
   followers!: Follower[];
 
-  @OneToMany(() => EventEntity, (event) => event.society)
+  @OneToMany(() => EventEntity, (event) => event.society,{
+    cascade: true,
+    onDelete: "CASCADE",
+  })
   events!: EventEntity[];
 
-  @OneToMany(() => Announcement, (announcement) => announcement.society)
+  @OneToMany(() => Announcement, (announcement) => announcement.society,{
+    cascade: true,
+    onDelete: "CASCADE",
+  })
   announcements!: Announcement[];
 }

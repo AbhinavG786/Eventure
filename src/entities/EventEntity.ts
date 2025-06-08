@@ -47,7 +47,9 @@ export class EventEntity extends BaseEntity {
   })
   bookmarks!: Bookmark[];
 
-  @ManyToOne(() => Society, (society) => society.events)
+  @ManyToOne(() => Society, (society) => society.events, {
+    onDelete: "CASCADE",
+  })
   society!: Society;
 
   @ManyToOne(() => User, (user) => user.events, {
@@ -55,9 +57,15 @@ export class EventEntity extends BaseEntity {
   })
   createdBy!: User;
 
-  @OneToMany(() => Registration, (registration) => registration.event)
+  @OneToMany(() => Registration, (registration) => registration.event,{
+    cascade: true,
+    onDelete: "CASCADE",
+  })
   registrations!: Registration[];
 
-  @OneToMany(() => Announcement, (announcement) => announcement.event)
+  @OneToMany(() => Announcement, (announcement) => announcement.event,{
+    cascade: true,
+    onDelete: "CASCADE",
+  })
   announcements!: Announcement[];
 }

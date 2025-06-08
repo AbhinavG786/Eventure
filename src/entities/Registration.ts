@@ -17,10 +17,14 @@ export class Registration extends BaseEntity {
   @CreateDateColumn()
   createdAt!: Date;
 
-  @ManyToOne(() => User, (user) => user.registrations)
+  @ManyToOne(() => User, (user) => user.registrations, {
+    onDelete: "CASCADE",
+  })
   user!: User;
 
-  @ManyToOne(() => EventEntity, (event) => event.registrations)
+  @ManyToOne(() => EventEntity, (event) => event.registrations, {
+    onDelete: "CASCADE",
+  })
   event!: EventEntity;
 
   @Column({

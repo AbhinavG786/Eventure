@@ -15,6 +15,13 @@ class AuthController {
       req.body;
     // store the backend generated sessionId in memory/localstorage which will be sent in the response in the upload api and then give it in request body
     try {
+      const existingUser=await AppDataSource.getRepository(User).findOne({
+        where:{email}
+      })
+      if(existingUser){
+        res.status(400).json({ message: "User with this email already exists" });
+        return;
+      }
       const hashedPassword = await bcrypt.hash(password, 10);
       const user = new User();
       user.name = name;
@@ -91,6 +98,13 @@ class AuthController {
       sessionId,
     } = req.body;
     try {
+       const existingUser=await AppDataSource.getRepository(User).findOne({
+        where:{email}
+      })
+      if(existingUser){
+        res.status(400).json({ message: "User with this email already exists" });
+        return;
+      }
       const hashedPassword = await bcrypt.hash(password, 10);
       const user = new User();
       user.name = name;

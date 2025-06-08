@@ -48,7 +48,10 @@ export class User extends BaseEntity {
   @Column({ type: "enum", enum: LoginProvider, default: LoginProvider.LOCAL })
   provider!: LoginProvider;
 
-  @OneToMany(() => Bookmark, (bookmark) => bookmark.user)
+  @OneToMany(() => Bookmark, (bookmark) => bookmark.user,{
+    cascade: true,
+    onDelete: "CASCADE",
+  })
   bookmarks!: Bookmark[];
 
   @OneToOne(() => Society, (society) => society.admin)
@@ -66,9 +69,15 @@ export class User extends BaseEntity {
   // @OneToMany(() => Subscription, (subscription) => subscription.user)
   // subscriptions!: Subscription[];
 
-  @OneToMany(() => Registration, (registration) => registration.user)
+  @OneToMany(() => Registration, (registration) => registration.user,{
+    cascade: true,
+    onDelete: "CASCADE",
+  })
   registrations!: Registration[];
 
-  @OneToMany(() => Announcement, (announcement) => announcement.user)
+  @OneToMany(() => Announcement, (announcement) => announcement.user,{
+    cascade: true,
+    onDelete: "CASCADE",
+  })
   announcements!: Announcement[];
 }

@@ -23,12 +23,18 @@ export class Announcement extends BaseEntity {
   @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
   createdAt!: Date;
 
-  @ManyToOne(() => User, (user) => user.announcements)
+  @ManyToOne(() => User, (user) => user.announcements, {
+    onDelete: "CASCADE",
+  })
   user!: User;
 
-  @ManyToOne(() => EventEntity, (event) => event.announcements)
+  @ManyToOne(() => EventEntity, (event) => event.announcements, {
+    onDelete: "CASCADE",
+  })
   event!: EventEntity;
 
-  @ManyToOne(() => Society, (society) => society.announcements)
+  @ManyToOne(() => Society, (society) => society.announcements, {
+    onDelete: "CASCADE",
+  })
   society!: Society;
 }

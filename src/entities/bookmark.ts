@@ -15,7 +15,9 @@ export class Bookmark extends BaseEntity {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @ManyToOne(() => User, (user) => user.bookmarks)
+  @ManyToOne(() => User, (user) => user.bookmarks, {
+    onDelete: "CASCADE",
+  })
   user!: User;
 
   @ManyToOne(() => EventEntity, (event) => event.bookmarks, {
