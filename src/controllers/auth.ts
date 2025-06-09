@@ -22,6 +22,13 @@ class AuthController {
         res.status(400).json({ message: "User with this email already exists" });
         return;
       }
+      const existingAdmissionNumber=await AppDataSource.getRepository(User).findOne({
+        where:{admissionNumber}
+      })
+      if(existingAdmissionNumber){
+        res.status(400).json({ message: "User with this admission number already exists" });
+        return;
+      }
       const hashedPassword = await bcrypt.hash(password, 10);
       const user = new User();
       user.name = name;
@@ -105,6 +112,13 @@ class AuthController {
         res.status(400).json({ message: "User with this email already exists" });
         return;
       }
+      const existingAdmissionNumber=await AppDataSource.getRepository(User).findOne({
+        where:{admissionNumber}
+      })
+      if(existingAdmissionNumber){
+        res.status(400).json({ message: "User with this admission number already exists" });
+        return;
+      }
       const hashedPassword = await bcrypt.hash(password, 10);
       const user = new User();
       user.name = name;
@@ -122,6 +136,7 @@ class AuthController {
         const uploadedUrl = await redisClient.get(`signup:logo:${sessionId}`);
         if (uploadedUrl) {
           society.logo = uploadedUrl;
+          user.profilePic = uploadedUrl;
         }
       }
       const societyAdmin = await AppDataSource.getRepository(Society).save(
@@ -136,7 +151,7 @@ class AuthController {
 
       res.status(201).json({
         message: "Society admin created successfully",
-        societyAdmin: {
+        society: {
           id: societyAdmin.id,
           name: societyAdmin.name,
           description: societyAdmin.description,

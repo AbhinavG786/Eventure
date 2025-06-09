@@ -12,9 +12,10 @@ import { User } from "./User";
 import { Registration } from "./Registration";
 import { Announcement } from "./Announcement";
 import { Bookmark } from "./bookmark";
+import { Rating } from "./Rating";
 
 @Entity()
-@Check(`"rating" >= 1 AND "rating" <= 5`)
+// @Check(`"rating" >= 1 AND "rating" <= 5`)
 @Check(`"startTime" < "endTime"`)
 export class EventEntity extends BaseEntity {
   @PrimaryGeneratedColumn("uuid")
@@ -29,8 +30,8 @@ export class EventEntity extends BaseEntity {
   @Column("text")
   venue!: string;
 
-  @Column("int", { default: 1 })
-  rating!: number;
+  // @Column("int", { default: 1 })
+  // rating!: number;
 
   @Column({ type: "timestamp" })
   startTime!: Date;
@@ -68,4 +69,10 @@ export class EventEntity extends BaseEntity {
     onDelete: "CASCADE",
   })
   announcements!: Announcement[];
+
+  @OneToMany(()=> Rating,(rating)=>rating.event,{
+    cascade: true,
+    onDelete: "CASCADE",
+  })
+  ratings!: Rating[];
 }

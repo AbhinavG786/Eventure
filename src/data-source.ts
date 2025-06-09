@@ -9,6 +9,7 @@ import { Announcement } from "./entities/Announcement";
 // import { Subscription } from "./entities/Subscriptions";
 import { Follower } from "./entities/Follower";
 import { Bookmark } from "./entities/bookmark";
+import { Rating } from "./entities/Rating";
 
 export const AppDataSource = new DataSource({
   type: "postgres",
@@ -27,5 +28,6 @@ export const AppDataSource = new DataSource({
     Registration,
     Follower,
     Bookmark,
+    Rating
   ],
 });

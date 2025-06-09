@@ -65,12 +65,17 @@ class RegistrationController {
   };
 
   deleteRegistration = async (req: express.Request, res: express.Response) => {
-    const { registrationId } = req.params;
+    const { eventId } = req.params;
+    const userId = req.user?.id;
+    if (!eventId || !userId) {
+      res.status(400).json({ message: "Missing fields" });
+      return;
+    }
     try {
       const registration = await AppDataSource.getRepository(
         Registration
       ).findOne({
-        where: { id: registrationId },
+        where: { user: { id: userId }, event: { id: eventId } },
       });
       if (!registration) {
         res.status(404).json({

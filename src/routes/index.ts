@@ -8,6 +8,7 @@ import searchRoutes from "./searchRoutes"
 import oauthRoutes from "./oauthRoutes"
 import notifyRoutes from "./notifyRoutes"
 import societyRoutes from "./societyRoutes"
+import ratingRoutes from "./ratingRoutes"
 import { Router } from "express"
 import authMiddleware from "../middlewares/authMiddleware"
 
@@ -23,5 +24,6 @@ router.use("/event",eventRoutes)
 // router.use("/announcement",announcementRoutes)
 router.use("/announcement",notifyRoutes)
 router.use("/search",searchRoutes)
+router.use("/rating",ratingRoutes)
 
 export default router

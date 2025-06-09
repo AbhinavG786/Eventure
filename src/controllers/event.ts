@@ -2,6 +2,7 @@ import express from "express";
 import { EventEntity } from "../entities/EventEntity";
 import { Society } from "../entities/Society";
 import { User } from "../entities/User";
+import { Rating } from "../entities/Rating";
 import { Bookmark } from "../entities/bookmark";
 import { In, MoreThanOrEqual } from "typeorm";
 import { AppDataSource } from "../data-source";
@@ -12,9 +13,9 @@ const TRENDING_CACHE_KEY = "trending_events";
 
 class EventController {
   createEvent = async (req: express.Request, res: express.Response) => {
-    const { name, description, venue, startTime, endTime, societyId} =
+    const { name, description, venue, startTime, endTime, societyId } =
       req.body;
-      const userId=req.user?.id
+    const userId = req.user?.id;
     try {
       const event = new EventEntity();
       const society = await AppDataSource.getRepository(Society).findOne({
@@ -236,7 +237,7 @@ class EventController {
 
   toggleBookmarkEvent = async (req: express.Request, res: express.Response) => {
     const { eventId } = req.params;
-    const userId=req.user?.id
+    const userId = req.user?.id;
     try {
       const user = await AppDataSource.getRepository(User).findOneBy({
         id: userId,
@@ -276,7 +277,7 @@ class EventController {
   };
 
   getBookmarkedEvents = async (req: express.Request, res: express.Response) => {
-    const userId=req.user?.id
+    const userId = req.user?.id;
 
     try {
       const bookmarks = await AppDataSource.getRepository(Bookmark).find({
@@ -298,9 +299,11 @@ class EventController {
     }
   };
 
-  rateEvent = async (req: express.Request, res: express.Response) => {
+  calculateAverageRatingForEvent = async (
+    req: express.Request,
+    res: express.Response
+  ) => {
     const { id } = req.params;
-    const { rating } = req.body;
     try {
       const event = await AppDataSource.getRepository(EventEntity).findOne({
         where: { id },
@@ -310,20 +313,29 @@ class EventController {
           message: "Event not found",
         });
       } else {
-        if (new Date() > event.endTime) {
-          event.rating = rating;
-          const updatedEvent = await AppDataSource.getRepository(
-            EventEntity
-          ).save(event);
+        const ratings = await AppDataSource.getRepository(Rating).find({
+          where: { event: { id } },
+        });
+        if (ratings.length === 0) {
           res.status(200).json({
-            message: "Event rated successfully",
-            event: updatedEvent,
+            message: "No ratings for this event",
+            averageRating: 0,
+          });
+        } else {
+          const totalRating = ratings.reduce(
+            (sum, rating) => sum + rating.rating,
+            0
+          );
+          const averageRating = totalRating / ratings.length;
+          res.status(200).json({
+            message: "Average rating calculated successfully",
+            averageRating: parseFloat(averageRating.toFixed(2)),
           });
         }
       }
     } catch (error) {
       res.status(500).json({
-        message: "Error rating event",
+        message: "Error calculating average rating for event",
         error,
       });
     }
@@ -372,7 +384,7 @@ class EventController {
     res: express.Response
   ) => {
     const { skip, take } = req.pagination!;
-    const userId=req.user?.id
+    const userId = req.user?.id;
     try {
       const user = await AppDataSource.getRepository(User).findOne({
         where: { id: userId },
@@ -469,68 +481,68 @@ class EventController {
   // };
 
   getTrendingEvents = async (req: express.Request, res: express.Response) => {
-  try {
-    const cached = await redisClient.get(TRENDING_CACHE_KEY);
-    if (cached) {
-       res.status(200).json({
-        message: "Trending events (from cache)",
-        events: JSON.parse(cached),
+    try {
+      const cached = await redisClient.get(TRENDING_CACHE_KEY);
+      if (cached) {
+        res.status(200).json({
+          message: "Trending events (from cache)",
+          events: JSON.parse(cached),
+        });
+        return;
+      }
+
+      const sinceDate = new Date(Date.now() - 24 * 60 * 60 * 1000); // last 24 hrs
+
+      // Step 1: Get top 10 event IDs with most registrations
+      const topEventIdsResult = await AppDataSource.getRepository(EventEntity)
+        .createQueryBuilder("event")
+        .leftJoin("event.registrations", "registration")
+        .select("event.id", "eventId")
+        .addSelect("COUNT(registration.id)", "regCount")
+        .where("registration.createdAt >= :sinceDate", { sinceDate })
+        .groupBy("event.id")
+        .orderBy("COUNT(registration.id)", "DESC") // ✅ FIXED
+        .limit(10)
+        .getRawMany();
+
+      const topEventIds = topEventIdsResult.map((e) => e.eventId);
+
+      if (!topEventIds.length) {
+        res.status(200).json({ message: "No trending events", events: [] });
+        return;
+      }
+
+      // Step 2: Fetch full event details
+      const trendingEvents = await AppDataSource.getRepository(
+        EventEntity
+      ).find({
+        where: { id: In(topEventIds) },
+        relations: ["society", "createdBy", "registrations"],
       });
-      return
+
+      // Optional: Sort again to preserve order as per regCount
+      trendingEvents.sort(
+        (a, b) => topEventIds.indexOf(a.id) - topEventIds.indexOf(b.id)
+      );
+
+      await redisClient.setEx(
+        TRENDING_CACHE_KEY,
+        300, // 5 min
+        JSON.stringify(trendingEvents)
+      );
+
+      res.status(200).json({
+        message: "Trending events (from DB)",
+        events: trendingEvents,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        message: "Internal server error",
+        error,
+      });
     }
-
-    const sinceDate = new Date(Date.now() - 24 * 60 * 60 * 1000); // last 24 hrs
-
-    // Step 1: Get top 10 event IDs with most registrations
-   const topEventIdsResult = await AppDataSource.getRepository(EventEntity)
-  .createQueryBuilder("event")
-  .leftJoin("event.registrations", "registration")
-  .select("event.id", "eventId")
-  .addSelect("COUNT(registration.id)", "regCount")
-  .where("registration.createdAt >= :sinceDate", { sinceDate })
-  .groupBy("event.id")
-  .orderBy("COUNT(registration.id)", "DESC") // ✅ FIXED
-  .limit(10)
-  .getRawMany();
-
-
-    const topEventIds = topEventIdsResult.map(e => e.eventId);
-
-    if (!topEventIds.length) {
-       res.status(200).json({ message: "No trending events", events: [] });
-       return
-    }
-
-    // Step 2: Fetch full event details
-    const trendingEvents = await AppDataSource.getRepository(EventEntity).find({
-      where: { id: In(topEventIds) },
-      relations: ["society", "createdBy", "registrations"],
-    });
-
-    // Optional: Sort again to preserve order as per regCount
-    trendingEvents.sort(
-      (a, b) => topEventIds.indexOf(a.id) - topEventIds.indexOf(b.id)
-    );
-
-    await redisClient.setEx(
-      TRENDING_CACHE_KEY,
-      300, // 5 min
-      JSON.stringify(trendingEvents)
-    );
-
-     res.status(200).json({
-      message: "Trending events (from DB)",
-      events: trendingEvents,
-    });
-  } catch (error) {
-    console.error(error);
-     res.status(500).json({
-      message: "Internal server error",
-      error,
-    });
-  }
-};
-
+  };
 }
 
 export default new EventController();

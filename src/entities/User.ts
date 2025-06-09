@@ -15,6 +15,7 @@ import { Society } from "./Society";
 import { LoginProvider } from "./enum/loginProvider";
 import { Follower } from "./Follower";
 import { Bookmark } from "./bookmark";
+import { Rating } from "./Rating";
 
 @Entity("users")
 export class User extends BaseEntity {
@@ -48,7 +49,7 @@ export class User extends BaseEntity {
   @Column({ type: "enum", enum: LoginProvider, default: LoginProvider.LOCAL })
   provider!: LoginProvider;
 
-  @OneToMany(() => Bookmark, (bookmark) => bookmark.user,{
+  @OneToMany(() => Bookmark, (bookmark) => bookmark.user, {
     cascade: true,
     onDelete: "CASCADE",
   })
@@ -57,10 +58,13 @@ export class User extends BaseEntity {
   @OneToOne(() => Society, (society) => society.admin)
   society?: Society;
 
-  @OneToMany(() => Follower, (follower) => follower.user)
+  @OneToMany(() => Follower, (follower) => follower.user, {
+    cascade: true,
+    onDelete: "CASCADE",
+  })
   following!: Follower[];
 
-  @OneToMany(() => EventEntity, (event) => event.createdBy,{
+  @OneToMany(() => EventEntity, (event) => event.createdBy, {
     cascade: true,
     onDelete: "CASCADE",
   })
@@ -69,13 +73,19 @@ export class User extends BaseEntity {
   // @OneToMany(() => Subscription, (subscription) => subscription.user)
   // subscriptions!: Subscription[];
 
-  @OneToMany(() => Registration, (registration) => registration.user,{
+  @OneToMany(() => Rating, (rating) => rating.user, {
+    cascade: true,
+    onDelete: "CASCADE",
+  })
+  ratings!: Rating[];
+
+  @OneToMany(() => Registration, (registration) => registration.user, {
     cascade: true,
     onDelete: "CASCADE",
   })
   registrations!: Registration[];
 
-  @OneToMany(() => Announcement, (announcement) => announcement.user,{
+  @OneToMany(() => Announcement, (announcement) => announcement.user, {
     cascade: true,
     onDelete: "CASCADE",
   })

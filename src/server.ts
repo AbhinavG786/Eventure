@@ -1,7 +1,7 @@
 import "./config"
 import { AppDataSource } from "./data-source";
 import router from "./routes/index";
-import session from "express-session";
+// import session from "express-session";
 import express from "express";
 // import dotenv from "dotenv";
 // import passport from "./utils/passport";
@@ -24,11 +24,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/", router);
-app.post("/", (req, res) => {
-  res.send(
-    '<h1>Welcome to Eventure</h1><a href="/auth/google">Login with Google</a>',
-  );
-});
+// app.post("/", (req, res) => {
+//   res.send(
+//     '<h1>Welcome to Eventure</h1><a href="/auth/google">Login with Google</a>',
+//   );
+// });
 
 AppDataSource.initialize()
   .then(() => {
