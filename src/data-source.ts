@@ -13,11 +13,12 @@ import { Rating } from "./entities/Rating";
 
 export const AppDataSource = new DataSource({
   type: "postgres",
-  host: process.env.DB_HOST, // will pick eventure-db in container
-  port: 5432,
-  username: process.env.DB_USER || "postgres",
-  password: process.env.DB_PASSWORD || "sunil786",
-  database: process.env.DB_NAME || "college_events",
+  // host: process.env.DB_HOST, // will pick eventure-db in container
+  // port: 5432,
+  // username: process.env.DB_USER || "postgres",
+  // password: process.env.DB_PASSWORD || "sunil786",
+  // database: process.env.DB_NAME || "college_events",
+  url: process.env.DATABASE_URL,
   synchronize: true,
   logging: false,
   entities: [

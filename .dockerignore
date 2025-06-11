@@ -1,7 +1,9 @@
 node_modules
 npm-debug.log
 .env
+.env.docker
 dist
 .git
 .gitignore
+
 
