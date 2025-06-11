@@ -30,6 +30,8 @@ app.use("/", router);
 //   );
 // });
 
+console.log("Using DATABASE_URL:", process.env.DATABASE_URL);
+
 AppDataSource.initialize()
   .then(() => {
     console.log("Connected");
