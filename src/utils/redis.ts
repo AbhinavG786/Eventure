@@ -14,6 +14,7 @@
 // export default redisClient;
 
 import { createClient } from "redis";
+console.log("Using Redis URL:", process.env.REDIS_URL);
 
 const redisClient = createClient({
   url: process.env.REDIS_URL,
