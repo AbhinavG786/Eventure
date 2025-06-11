@@ -1,10 +1,14 @@
 import admin from "firebase-admin";
 import path from "path";
 import fs from "fs";
-const serviceAccountPath = require(path.join(
+// const serviceAccountPath = require(path.join(
+//   __dirname,
+//   "../../firebase/serviceAccountKey.json"
+// ));
+const serviceAccountPath = path.join(
   __dirname,
   "../../firebase/serviceAccountKey.json"
-));
+);
 // Check if the key file exists
 if (!fs.existsSync(serviceAccountPath)) {
   const base64 = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
