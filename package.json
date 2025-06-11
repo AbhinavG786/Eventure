@@ -6,8 +6,11 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "dev": "node dist/server.js", 
-    "start":"node dist/server.js"
+    "dev": "node dist/server.js",
+    "start": "node dist/server.js",
+    "migration:generate": "npx typeorm migration:generate -- -d ./src/data-source.ts src/migration/Init",
+    "migration:run": "npx typeorm migration:run",
+    "migration:revert": "npx typeorm migration:revert"
   },
   "keywords": [],
   "author": "",
@@ -47,9 +50,11 @@
     "@types/nodemailer": "^6.4.17",
     "@types/passport": "^1.0.17",
     "@types/passport-google-oauth20": "^2.0.16",
+    "@types/pg": "^8.15.4",
     "@types/redis": "^4.0.10",
     "@types/uuid": "^10.0.0",
     "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.8.3"
   }
 }

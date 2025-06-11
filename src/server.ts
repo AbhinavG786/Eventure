@@ -29,8 +29,12 @@ app.use("/", router);
 //     '<h1>Welcome to Eventure</h1><a href="/auth/google">Login with Google</a>',
 //   );
 // });
+app.get("/healthz", (req, res) => {
+  res.status(200).send("OK,deployment is healthy");
+});
 
-console.log("Using DATABASE_URL:", process.env.DATABASE_URL);
+
+// console.log("Using DATABASE_URL:", process.env.DATABASE_URL);
 
 AppDataSource.initialize()
   .then(() => {
