@@ -11,7 +11,7 @@ import { imagekit } from "../utils/imageKit";
 
 class AuthController {
   signUpAsStudent = async (req: express.Request, res: express.Response) => {
-    const { name, email, password, admissionNumber, aboutMe, sessionId } =
+    const { name, email, password, admissionNumber, sessionId } =
       req.body;
     // store the backend generated sessionId in memory/localstorage which will be sent in the response in the upload api and then give it in request body
     try {
@@ -35,7 +35,7 @@ class AuthController {
       user.email = email;
       user.password = hashedPassword;
       user.admissionNumber = admissionNumber;
-      user.aboutMe = aboutMe;
+      // user.aboutMe = aboutMe;
       user.role = UserRole.STUDENT;
       if (sessionId) {
         const uploadedUrl = await redisClient.get(`signup:image:${sessionId}`);
