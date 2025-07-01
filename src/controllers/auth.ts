@@ -244,9 +244,11 @@ class AuthController {
     const storedOtp = await redisClient.get(`otp:${email}`);
     if (!storedOtp) {
       res.status(400).json({ message: "OTP expired or invalid" });
+      return
     }
     if (storedOtp !== otp) {
       res.status(400).json({ message: "Invalid OTP" });
+      return
     }
     await redisClient.del(`otp:${email}`);
     res.status(200).json({ message: "OTP verified successfully" });

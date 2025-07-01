@@ -1,4 +1,3 @@
-import { log } from "console";
 import express from "express";
 import jwt from "jsonwebtoken";
 
