@@ -34,8 +34,8 @@ export const AppDataSource = new DataSource({
   // password: process.env.DB_PASSWORD || "sunil786",
   // database: process.env.DB_NAME || "college_events",
   url: process.env.DATABASE_URL,
-  synchronize: false,
-  migrationsRun: true,
+  synchronize: true,
+  migrationsRun: false,
   logging: true,
   // entities: [
   //   User,
