@@ -232,6 +232,17 @@ class AuthController {
 
   sendOtpToEmail = async (req: express.Request, res: express.Response) => {
     const { email } = req.body;
+    if (!email) {
+      res.status(400).json({ message: "Email is required" });
+      return;
+    }
+    const existingEmail = await AppDataSource.getRepository(User).findOne({
+      where: { email },
+    });
+    if (existingEmail) {
+      res.status(400).json({ message: "Email already exists" });
+      return;
+    }
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
     const otpExpiry = Date.now() + 10 * 60 * 1000; //10 mins
     await redisClient.set(`otp:${email}`, otp, { PX: otpExpiry }); // expiry time in milliseconds
@@ -265,6 +276,7 @@ class AuthController {
       });
       if (!user) {
         res.status(400).json({ message: "User not found" });
+        return
       } else {
         const token = jwt.sign(
           { id: user.id, email: user.email },
@@ -299,10 +311,12 @@ class AuthController {
       });
       if (!user) {
         res.status(400).json({ message: "User not found" });
+        return
       } else {
         const storedToken = await redisClient.get(`password-reset:${user.id}`);
         if (!storedToken) {
           res.status(400).json({ message: "Token expired or invalid" });
+          return
         } else {
           jwt.verify(
             token,
@@ -310,6 +324,7 @@ class AuthController {
             async (err: any) => {
               if (err) {
                 res.status(400).json({ message: "Invalid token" });
+                return
               } else {
                 res
                   .status(200)
@@ -335,6 +350,7 @@ class AuthController {
       });
       if (!user) {
         res.status(400).json({ message: "User not found" });
+        return
       } else {
         // const checkPasswordValidation = await bcrypt.compare(
         //   oldPassword,
