@@ -31,7 +31,11 @@ const signInWithGoogle = async (
     const fakePassword = "GoogleLogin";
     const hashFakePassword = await bcrypt.hash(fakePassword, 10);
 
+    let isLoggingInWithGoogle = false;
     let user = await AppDataSource.getRepository(User).findOneBy({ email });
+    if(user){
+      isLoggingInWithGoogle=true
+    }
     if (!user) {
       user = AppDataSource.getRepository(User).create({
         email,
@@ -55,10 +59,11 @@ const signInWithGoogle = async (
       { expiresIn: "7d" }
     );
 
-    res.status(200).json({ token, user });
+    res.status(200).json({ token, user ,isLoggingInWithGoogle:isLoggingInWithGoogle });
   } catch (error) {
     res.status(401).json({ message: "Invalid Google ID token" ,error});
   }
+
 };
 
 export default signInWithGoogle;
