@@ -1,9 +1,11 @@
 import express from "express";
 import { User } from "../entities/User";
+import { Society } from "../entities/Society";
 import { AppDataSource } from "../data-source";
 import { imagekit } from "../utils/imageKit";
 import {v4 as uuidv4} from "uuid";
 import redisClient from "../utils/redis";
+import { UserRole } from "../entities/enum/userRole";
 
 class UserController {
   getUserById = async (req: express.Request, res: express.Response) => {
@@ -50,6 +52,62 @@ class UserController {
       res.status(500).json({ message: "Error updating user", error });
     }
   };
+
+   updateOrganiser = async (req: express.Request, res: express.Response) => {
+    const { id } = req.params;
+    const {
+      name,
+      email,
+      societyName,
+      societyDescription,
+      societyType,
+      admissionNumber,
+      sessionId
+    } = req.body;
+    try {
+      const user = await AppDataSource.getRepository(User).findOne({
+        where: { id },
+      });
+      if (!user) {
+        res.status(404).json({ message: "User not found" });
+      } else {
+        user.name = name || user.name;
+        user.email = email || user.email;
+        user.admissionNumber = admissionNumber || user.admissionNumber;
+        user.role = UserRole.SOCIETY_ADMIN;
+
+        const updatedUser = await AppDataSource.getRepository(User).save(user);
+
+      const society = new Society();
+      society.name = societyName;
+      society.description = societyDescription;
+      society.type = societyType;
+      society.admin = updatedUser;
+      if (sessionId) {
+        const uploadedUrl = await redisClient.get(`signup:logo:${sessionId}`);
+        if (uploadedUrl) {
+          society.logo = uploadedUrl;
+          updatedUser.profilePic = uploadedUrl;
+        }
+      }
+      const newSociety = await AppDataSource.getRepository(Society).save(
+        society
+      );
+      res.status(201).json({
+        message: "Society admin created successfully",
+        society: {
+          id: newSociety.id,
+          name: newSociety.name,
+          description: newSociety.description,
+          type: newSociety.type,
+        },
+      });
+    }
+    } catch (error) {
+      res.status(500).json({ message: "Error updating user", error });
+    }
+  };
+
   deleteUser = async (req: express.Request, res: express.Response) => {
     const { id } = req.params;
     try {

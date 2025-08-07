@@ -6,6 +6,7 @@ const router = Router();
 
 router.route("/all").get(user.getAllUsers);
 router.route("/:id").get(user.getUserById);
+router.route("/organiser/:id").patch(user.updateOrganiser);
 router.route("/:id").patch(user.updateUser);
 router.route("/:id").delete(user.deleteUser);
 router.route("/all-events/registered").get(authMiddleware.verifyToken,user.getAllRegisteredEventsForUser);
