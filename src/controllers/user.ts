@@ -6,6 +6,7 @@ import { imagekit } from "../utils/imageKit";
 import {v4 as uuidv4} from "uuid";
 import redisClient from "../utils/redis";
 import { UserRole } from "../entities/enum/userRole";
+import { SocietyType } from "../entities/enum/societyType";
 
 class UserController {
   getUserById = async (req: express.Request, res: express.Response) => {
@@ -64,7 +65,30 @@ class UserController {
       admissionNumber,
       sessionId
     } = req.body;
+    if(!id)
+    {
+      res.status(400).json({ message: "User ID is required" });
+      return;
+    }
+    if(!name || !societyName || !societyDescription || !societyType || !admissionNumber)
+    {
+      res.status(400).json({ message: "Society details are required" });
+      return;
+    }
+    if(societyType){
+      if(!Object.values(SocietyType).includes(societyType)){
+        res.status(400).json({ message: "Invalid society type" });
+        return;
+      }
+    }
     try {
+      const existingUserWithSameAdmissionNo = await AppDataSource.getRepository(User).findOne({
+        where: { admissionNumber },
+      });
+      if (existingUserWithSameAdmissionNo && existingUserWithSameAdmissionNo.id !== id) {
+        res.status(400).json({ message: "Admission number already exists" });
+        return;
+      }
       const user = await AppDataSource.getRepository(User).findOne({
         where: { id },
       });
@@ -117,6 +141,14 @@ class UserController {
       if (!user) {
         res.status(404).json({ message: "User not found" });
       } else {
+        if(user.role === UserRole.SOCIETY_ADMIN) {
+          const society=await AppDataSource.getRepository(Society).findOne({
+            where: { admin: { id: user.id } },
+          });
+          if(society){
+          await AppDataSource.getRepository(Society).remove(society);
+          }
+        }
         await AppDataSource.getRepository(User).remove(user);
       res.status(200).json({ message: "User deleted successfully" });
       }

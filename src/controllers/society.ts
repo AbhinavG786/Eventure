@@ -115,6 +115,7 @@ class SocietyController {
         res.status(404).json({
           message: "Society not found",
         });
+        return
       } else {
         await AppDataSource.getRepository(Society).remove(society);
         res.status(200).json({
