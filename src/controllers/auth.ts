@@ -195,6 +195,14 @@ class AuthController {
         res.status(200).json({
           message: "Login successful",
           accessToken,
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            admissionNumber: user.admissionNumber,
+            aboutMe: user.aboutMe,
+            role: user.role,
+        },
         });
       }
     } catch (error) {
