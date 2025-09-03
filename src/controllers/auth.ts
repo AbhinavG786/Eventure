@@ -175,6 +175,7 @@ class AuthController {
     try {
       const user = await AppDataSource.getRepository(User).findOne({
         where: { email },
+        relations: ["following","society","bookmarks","events","registrations","ratings","announcements"],
       });
       if (!user) {
         res.status(401).json({ message: "Invalid email or password" });
@@ -195,14 +196,7 @@ class AuthController {
         res.status(200).json({
           message: "Login successful",
           accessToken,
-          user: {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            admissionNumber: user.admissionNumber,
-            aboutMe: user.aboutMe,
-            role: user.role,
-        },
+          user
         });
       }
     } catch (error) {
