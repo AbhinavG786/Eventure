@@ -3,7 +3,7 @@ import { User } from "../entities/User";
 import { Society } from "../entities/Society";
 import { AppDataSource } from "../data-source";
 import { imagekit } from "../utils/imageKit";
-import {v4 as uuidv4} from "uuid";
+import { v4 as uuidv4 } from "uuid";
 import redisClient from "../utils/redis";
 import { UserRole } from "../entities/enum/userRole";
 import { SocietyType } from "../entities/enum/societyType";
@@ -14,15 +14,28 @@ class UserController {
     try {
       const user = await AppDataSource.getRepository(User).findOne({
         where: { id },
+        relations: ["following", "following.society"],
       });
       if (!user) {
         res.status(404).json({ message: "User not found" });
+        return;
       }
-      res.status(200).json(user);
+      const societiesFollowed = user.following.map((f) => ({
+        id: f.society.id,
+        name: f.society.name,
+        description: f.society.description,
+        logo: f.society.logo,
+        type: f.society.type,
+      }));
+
+      delete (user as any).following;
+
+      res.status(200).json({ user, societiesFollowed });
     } catch (error) {
       res.status(500).json({ message: "Error fetching user", error });
     }
   };
+
   getAllUsers = async (req: express.Request, res: express.Response) => {
     try {
       const users = await AppDataSource.getRepository(User).find();
@@ -54,7 +67,7 @@ class UserController {
     }
   };
 
-   updateOrganiser = async (req: express.Request, res: express.Response) => {
+  updateOrganiser = async (req: express.Request, res: express.Response) => {
     const { id } = req.params;
     const {
       name,
@@ -63,29 +76,38 @@ class UserController {
       societyDescription,
       societyType,
       admissionNumber,
-      sessionId
+      sessionId,
     } = req.body;
-    if(!id)
-    {
+    if (!id) {
       res.status(400).json({ message: "User ID is required" });
       return;
     }
-    if(!name || !societyName || !societyDescription || !societyType || !admissionNumber)
-    {
+    if (
+      !name ||
+      !societyName ||
+      !societyDescription ||
+      !societyType ||
+      !admissionNumber
+    ) {
       res.status(400).json({ message: "Society details are required" });
       return;
     }
-    if(societyType){
-      if(!Object.values(SocietyType).includes(societyType)){
+    if (societyType) {
+      if (!Object.values(SocietyType).includes(societyType)) {
         res.status(400).json({ message: "Invalid society type" });
         return;
       }
     }
     try {
-      const existingUserWithSameAdmissionNo = await AppDataSource.getRepository(User).findOne({
+      const existingUserWithSameAdmissionNo = await AppDataSource.getRepository(
+        User
+      ).findOne({
         where: { admissionNumber },
       });
-      if (existingUserWithSameAdmissionNo && existingUserWithSameAdmissionNo.id !== id) {
+      if (
+        existingUserWithSameAdmissionNo &&
+        existingUserWithSameAdmissionNo.id !== id
+      ) {
         res.status(400).json({ message: "Admission number already exists" });
         return;
       }
@@ -102,31 +124,31 @@ class UserController {
 
         const updatedUser = await AppDataSource.getRepository(User).save(user);
 
-      const society = new Society();
-      society.name = societyName;
-      society.description = societyDescription;
-      society.type = societyType;
-      society.admin = updatedUser;
-      if (sessionId) {
-        const uploadedUrl = await redisClient.get(`signup:logo:${sessionId}`);
-        if (uploadedUrl) {
-          society.logo = uploadedUrl;
-          updatedUser.profilePic = uploadedUrl;
+        const society = new Society();
+        society.name = societyName;
+        society.description = societyDescription;
+        society.type = societyType;
+        society.admin = updatedUser;
+        if (sessionId) {
+          const uploadedUrl = await redisClient.get(`signup:logo:${sessionId}`);
+          if (uploadedUrl) {
+            society.logo = uploadedUrl;
+            updatedUser.profilePic = uploadedUrl;
+          }
         }
+        const newSociety = await AppDataSource.getRepository(Society).save(
+          society
+        );
+        res.status(201).json({
+          message: "Society admin created successfully",
+          society: {
+            id: newSociety.id,
+            name: newSociety.name,
+            description: newSociety.description,
+            type: newSociety.type,
+          },
+        });
       }
-      const newSociety = await AppDataSource.getRepository(Society).save(
-        society
-      );
-      res.status(201).json({
-        message: "Society admin created successfully",
-        society: {
-          id: newSociety.id,
-          name: newSociety.name,
-          description: newSociety.description,
-          type: newSociety.type,
-        },
-      });
-    }
     } catch (error) {
       res.status(500).json({ message: "Error updating user", error });
     }
@@ -141,16 +163,16 @@ class UserController {
       if (!user) {
         res.status(404).json({ message: "User not found" });
       } else {
-        if(user.role === UserRole.SOCIETY_ADMIN) {
-          const society=await AppDataSource.getRepository(Society).findOne({
+        if (user.role === UserRole.SOCIETY_ADMIN) {
+          const society = await AppDataSource.getRepository(Society).findOne({
             where: { admin: { id: user.id } },
           });
-          if(society){
-          await AppDataSource.getRepository(Society).remove(society);
+          if (society) {
+            await AppDataSource.getRepository(Society).remove(society);
           }
         }
         await AppDataSource.getRepository(User).remove(user);
-      res.status(200).json({ message: "User deleted successfully" });
+        res.status(200).json({ message: "User deleted successfully" });
       }
     } catch (error) {
       res.status(500).json({ message: "Error deleting user", error });
@@ -161,7 +183,7 @@ class UserController {
     req: express.Request,
     res: express.Response
   ) => {
-    const userId=req.user?.id
+    const userId = req.user?.id;
     if (!userId) res.status(401).json({ message: "UserId not found" });
     try {
       const userWithRegistrations = await AppDataSource.getRepository(
@@ -188,28 +210,32 @@ class UserController {
     }
   };
 
-  uploadProfilePicBeforeSignUp=async (req: express.Request, res: express.Response) => {
+  uploadProfilePicBeforeSignUp = async (
+    req: express.Request,
+    res: express.Response
+  ) => {
     // const {sessionId}=req.body; //either generate it on frontend and send it to backend or let me generate it here
-    const sessionId=uuidv4();
-  try{
-    const fileBuffer=req.file?.buffer;
-    if(fileBuffer){
-    const uploadedImage=await imagekit.upload({
-      file:fileBuffer,
-      fileName: `profile_${sessionId}.jpg`,
-      folder:"/temp"
-    })
-    await redisClient.set(`signup:image:${sessionId}`, uploadedImage.url, {
-      EX: 600 // Expiry time in seconds
-    });
-    res.status(200).json({
-      message:"Image uploaded successfully",sessionId})
-  }
-  }
-  catch(error){
-    res.status(500).json({message:"Error uploading image",error})
-  }
-}
+    const sessionId = uuidv4();
+    try {
+      const fileBuffer = req.file?.buffer;
+      if (fileBuffer) {
+        const uploadedImage = await imagekit.upload({
+          file: fileBuffer,
+          fileName: `profile_${sessionId}.jpg`,
+          folder: "/temp",
+        });
+        await redisClient.set(`signup:image:${sessionId}`, uploadedImage.url, {
+          EX: 600, // Expiry time in seconds
+        });
+        res.status(200).json({
+          message: "Image uploaded successfully",
+          sessionId,
+        });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Error uploading image", error });
+    }
+  };
 }
 
 export default new UserController();

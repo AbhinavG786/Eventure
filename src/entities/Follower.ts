@@ -7,7 +7,6 @@ import {
 } from "typeorm";
 import { User } from "./User";
 import { Society } from "./Society";
-import user from "../controllers/user";
 
 @Entity()
 @Unique(["user", "society"])
